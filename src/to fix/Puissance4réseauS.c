@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     intro();
     WSADATA WSAData;
     int erreur = WSAStartup(MAKEWORD(2,2), &WSAData);
-    tryconnect(erreur, argc, argv);
+    tryconnect(erreur);
 }
 
 int tryconnect(int erreur){
