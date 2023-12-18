@@ -10,3 +10,6 @@ C'est un puissance 4 avec une fonctionnalité en ligne. Rien de plus.
 
 
 Faudra faire la doc.
+
+-lws2_32
+
