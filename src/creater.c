@@ -52,7 +52,7 @@ int main()
     printf("Showing contents of directory.\n");
     sleep(1);
     chdir(dirname);
-    system("dir");
+    system("ls||dir");
     printf("\nPress enter to continue.\n");
     getch();
     clrscr();
@@ -61,27 +61,78 @@ int main()
     sleep(1);
     getch();
     FILE *fptr;
-
-    // Create a file
-
-    // Close the file
     char filename[250];
+    bool choosename = false;
+    int choice = -1;
+
     do
     {
-        printf("Enter the name of the file you want to create.\n");
-        scanf("%s", filename);
-        strcat(filename, ".txt");
-        if (!file_exists(filename))
+        printf("Do you want to choose the name of the file ?\n");
+        printf("1. Yes\n");
+        printf("2. No\n");
+        scanf("%d", &choice);
+        if (choice == 1)
+        {
+            choosename = true;
+            break;
+        }
+        else if (choice == 2)
+        {
+            choosename = false;
+            break;
+        }
+        else
+        {
+            printf("Invalid choice.\n");
+        }
+    } while (choice != 1 || choice != 2);
+
+    if (choosename)
+    {
+        do
+        {
+            printf("Enter the name of the file you want to create.\n");
+            scanf("%s", filename);
+            strcat(filename, ".txt");
+            if (!file_exists(filename))
+            {
+                fptr = fopen(filename, "w");
+                fclose(fptr);
+                printf("File %s created.\n", filename);
+            }
+            else
+            {
+                printf("File %s already exists.\n", filename);
+            }
+        } while (!file_exists(filename));
+    }
+    else
+    {
+        bool createit = false;
+        strcpy(filename, "replay1.txt");
+        do
+        {
+            if (!file_exists(filename))
+            {
+                fptr = fopen(filename, "w");
+                fclose(fptr);
+                printf("File %s created.\n", filename);
+            }
+            else
+            {
+                printf("File %s already exists.\n", filename);
+                createit = true;
+            }
+            i++;
+            sprintf(filename, "replay%d.txt", i);
+        } while (file_exists(filename));
+        if (createit)
         {
             fptr = fopen(filename, "w");
             fclose(fptr);
             printf("File %s created.\n", filename);
         }
-        else
-        {
-            printf("File %s already exists.\n", filename);
-        }
-    } while (!file_exists(filename));
+    }
 
     printf("Press enter to continue.\n");
     getch();

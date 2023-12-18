@@ -27,6 +27,7 @@ int main()
         }
     } while (!file_exists(filename));
     char line[250];
+    int i = 1;
     file = fopen(filename, "r");
     if (file == NULL)
     {
@@ -36,7 +37,34 @@ int main()
     printf("File opened successfully.\n");
     while (fgets(line, sizeof(line), file) != NULL)
     {
-        printf("%s", line);
+        if (i == 1)
+        {
+            char d[] = "-";
+            char *p = strtok(line, d);
+            printf("Player 1: %s\n", p);
+            p = strtok(NULL, d);
+            printf("Player 2: %s\n", p);
+            i++;
+            continue;
+        } else {
+            printf("---------------------------------\nLigne %d : %s\n\n", i, line);
+            char d[] = " ";
+            char *p = strtok(line, d);
+            bool jorc = true;
+            while (p != NULL)
+            {
+                jorc=!jorc;
+                if (jorc)
+                {
+                    printf("fait le Coup %s\n", p);
+                }
+                else
+                {
+                    printf("Joueur %s ", p);
+                }
+                p = strtok(NULL, d);
+            }
+        }
     }
     fclose(file);
     return 0;
