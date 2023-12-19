@@ -27,7 +27,7 @@ void launchgame();
 int turns();
 void verifyadd(int colonne, int *joueur);
 void verifywin(int colonne, int *joueur);
-void endgame(int *wjoueur, int result);
+void endgame(int *wjoueur, int result, int mode);
 void checkligne(int *joueur);
 void checkcol(int *joueur);
 void checkdiag(int *joueur);
@@ -280,29 +280,33 @@ void checknull()
 {
     if (tab[0][0] && tab[0][1] && tab[0][2] && tab[0][3] && tab[0][4] && tab[0][5] && tab[0][6])
     {
-        return endgame(NULL, 0);
+        return endgame(NULL, 0, 9);
     }
 }
+
 void checkligne(int *joueur)
 {
     for (int i = 0; i < LIGNES; i++)
     {
         for (int j = 0; j < COLONNES; j++)
         {
-            if (tab[i][j] == tab[i][j + 1] && tab[i][j] == tab[i][j + 2] && tab[i][j] == tab[i][j + 3] && (tab[i][j] == 1 || tab[i][j] == 2))
+            if (tab[i][j] == tab[i][j + 1] && tab[i][j] == tab[i][j + 2] && tab[i][j] == tab[i][j + 3] && (tab[i][j] == 1 || tab[i][j] == 2) && (j + 3 <= 6))
             {
-                if (*joueur == 1) {
-                    tab[i][j]= 3;
-                    tab[i][j + 1]= 3;
-                    tab[i][j + 2]= 3;
-                    tab[i][j + 3]= 3;
-                } else {
-                    tab[i][j]= 4;
-                    tab[i][j + 1]= 4;
-                    tab[i][j + 2]= 4;
-                    tab[i][j + 3]= 4;
+                if (*joueur == 1)
+                {
+                    tab[i][j] = 3;
+                    tab[i][j + 1] = 3;
+                    tab[i][j + 2] = 3;
+                    tab[i][j + 3] = 3;
                 }
-                return endgame(joueur, 1);
+                else
+                {
+                    tab[i][j] = 4;
+                    tab[i][j + 1] = 4;
+                    tab[i][j + 2] = 4;
+                    tab[i][j + 3] = 4;
+                }
+                return endgame(joueur, 1, 1);
             }
         }
     }
@@ -313,20 +317,23 @@ void checkcol(int *joueur)
     {
         for (int j = 0; j < COLONNES; j++)
         {
-            if (tab[i][j] == tab[i + 1][j] && tab[i][j] == tab[i + 2][j] && tab[i][j] == tab[i + 3][j] && (tab[i][j] == 1 || tab[i][j] == 2))
+            if (tab[i][j] == tab[i + 1][j] && tab[i][j] == tab[i + 2][j] && tab[i][j] == tab[i + 3][j] && (tab[i][j] == 1 || tab[i][j] == 2) && (i + 3 <= 6))
             {
-                if (*joueur == 1) {
-                    tab[i][j]= 3;
-                    tab[i + 1][j]= 3;
-                    tab[i + 2][j]= 3;
-                    tab[i + 3][j]= 3;
-                } else {
-                    tab[i][j]= 4;
-                    tab[i + 1][j]= 4;
-                    tab[i + 2][j]= 4;
-                    tab[i + 3][j]= 4;
+                if (*joueur == 1)
+                {
+                    tab[i][j] = 3;
+                    tab[i + 1][j] = 3;
+                    tab[i + 2][j] = 3;
+                    tab[i + 3][j] = 3;
                 }
-                return endgame(joueur, 1);
+                else
+                {
+                    tab[i][j] = 4;
+                    tab[i + 1][j] = 4;
+                    tab[i + 2][j] = 4;
+                    tab[i + 3][j] = 4;
+                }
+                return endgame(joueur, 1, 2);
             }
         }
     }
@@ -337,48 +344,48 @@ void checkdiag(int *joueur)
     {
         for (int j = 0; j < COLONNES; j++)
         {
-            if (tab[i][j] == tab[i + 1][j + 1] && tab[i][j] == tab[i + 2][j + 2] && tab[i][j] == tab[i + 3][j + 3] && (tab[i][j] == 1 || tab[i][j] == 2)) {
-                if (*joueur == 1) {
-                    tab[i][j]= 3;
-                    tab[i + 1][j + 1]= 3;
-                    tab[i + 2][j + 2]= 3;
-                    tab[i + 3][j + 3]= 3;
-                } else {
-                    tab[i][j]= 4;
-                    tab[i + 1][j + 1]= 4;
-                    tab[i + 2][j + 2]= 4;
-                    tab[i + 3][j + 3]= 4;
+            if (tab[i][j] == tab[i + 1][j + 1] && tab[i][j] == tab[i + 2][j + 2] && tab[i][j] == tab[i + 3][j + 3] && (tab[i][j] == 1 || tab[i][j] == 2) &&
+                (i + 3 <= 6 && j + 3 <= 6))
+            {
+                if (*joueur == 1)
+                {
+                    tab[i][j] = 3;
+                    tab[i + 1][j + 1] = 3;
+                    tab[i + 2][j + 2] = 3;
+                    tab[i + 3][j + 3] = 3;
                 }
-                return endgame(joueur, 1);
-            } else if (tab[i][j] == tab[i + 1][j - 1] && tab[i][j] == tab[i + 2][j - 2] && tab[i][j] == tab[i + 3][j - 3] && (tab[i][j] == 1 || tab[i][j] == 2)) {
-                if (*joueur == 1) {
-                    tab[i][j]= 3;
-                    tab[i + 1][j - 1]= 3;
-                    tab[i + 2][j - 2]= 3;
-                    tab[i + 3][j - 3]= 3;
-                } else {
-                    tab[i][j]= 4;
-                    tab[i + 1][j - 1]= 4;
-                    tab[i + 2][j - 2]= 4;
-                    tab[i + 3][j - 3]= 4;
+                else
+                {
+                    tab[i][j] = 4;
+                    tab[i + 1][j + 1] = 4;
+                    tab[i + 2][j + 2] = 4;
+                    tab[i + 3][j + 3] = 4;
                 }
-                return endgame(joueur, 1);
+                return endgame(joueur, 1, 3);
+            }
+            else if (tab[i][j] == tab[i + 1][j - 1] && tab[i][j] == tab[i + 2][j - 2] && tab[i][j] == tab[i + 3][j - 3] && (tab[i][j] == 1 || tab[i][j] == 2) &&
+                     ((i + 3 <= 6 && j - 3 >= 0)))
+            {
+                if (*joueur == 1)
+                {
+                    tab[i][j] = 3;
+                    tab[i + 1][j - 1] = 3;
+                    tab[i + 2][j - 2] = 3;
+                    tab[i + 3][j - 3] = 3;
+                }
+                else
+                {
+                    tab[i][j] = 4;
+                    tab[i + 1][j - 1] = 4;
+                    tab[i + 2][j - 2] = 4;
+                    tab[i + 3][j - 3] = 4;
+                }
+                return endgame(joueur, 1, 4);
             }
         }
     }
 }
-void createtab()
-{
-    
-    for (int i = 0; i < LIGNES; i++)
-    {
-        for (int j = 0; j < COLONNES; j++)
-        {
-            tab[i][j] = VIDE;
-        }
-    }
-}
-void endgame(int *wjoueur, int result)
+void endgame(int *wjoueur, int result, int mode)
 {
     printtab();
     if (result == 0)
@@ -388,7 +395,27 @@ void endgame(int *wjoueur, int result)
     else if (result == 1)
     {
         printf("Le joueur %d a gagne !\n", *wjoueur);
+
+        // -------Debug de la fonction qui a trouvé le gagnant-------
+        // switch (mode)
+        // {
+        // case 1:
+        //     printf("ligne");
+        //     break;
+        // case 2:
+        //     printf("colonne");
+        //     break;
+        // case 3:
+        //     printf("diagonale qui monte vers la droite");
+        //     break;
+        // case 4:
+        //     printf("diagonale qui monte vers la gauche");
+        //     break;
+        // }
+        // -------Debug de la fonction qui a trouvé le gagnant-------
     }
-    int* pended = &ended;
-    *pended = 1;
+    sleep(2);
+    printf("A bientot !\n");
+
+    exit(0);
 }
