@@ -68,6 +68,36 @@ int main()
     }
     printf("File opened successfully.\n");
     createtab();
+    int choice = 0;
+    bool adv = false;
+    printf("Do you want to have animations ?\n");
+    printf("1. Yes\n");
+    printf("2. No\n");
+    scanf("%d", &choice);
+    if (choice == 1)
+    {
+        printf("Animations activated.\n");
+        animation = 1;
+    }
+    else
+    {
+        printf("Animations desactivated.\n");
+        animation = 0;
+    }   
+    printf("Do you want to press to make the game advance ?\n");
+    printf("1. Yes\n");
+    printf("2. No\n");
+    scanf("%d", &choice);
+    if (choice == 1)
+    {
+        printf("Press enter to make the game advance.\n");
+        adv = true;
+    }
+    else
+    {
+        printf("The game will advance automatically.\n");
+    }
+
     while (fgets(line, sizeof(line), file) != NULL)
     {
         if (end)
@@ -97,6 +127,13 @@ int main()
                 {
                     printf("fait le Coup %s. \n", p);
                     turns(p);
+                    if (adv)
+                    {
+                        printf("Press enter to continue.\n");
+                        getchar();
+                    } else {
+                        sleep(1);
+                    }
                 }
                 else
                 {
@@ -105,7 +142,6 @@ int main()
                 }
                 p = strtok(NULL, d);
             }
-            sleep(1);
         }
     }
     fclose(file);
@@ -184,7 +220,7 @@ void verifyadd(int colonne, int *joueur)
                 {
                     tab[f][colonne - 1] = *joueur;
                     printtab();
-                    usleep(2000);
+                    usleep(700);
                     system("cls");
                     tab[f][colonne - 1] = VIDE;
                 }
@@ -324,7 +360,6 @@ void checkdiag(int *joueur)
 }
 void endgame(int *wjoueur, int result, int mode)
 {
-    printtab();
     if (result == 0)
     {
         printf("Aucun joueur n'a réussi a aligner 4 pions. C'est une égalité !");
