@@ -129,6 +129,8 @@ int tryconnect(int erreur)
                                 system("cls");
                                 int rnum = buffer2 - '0';
                                 verifyadd(rnum, &jactuel);
+                            verifywin(rnum, pjactuel);
+
                                 *pjactuel = 1;
                             }
                         }
@@ -181,7 +183,7 @@ void onConnectdone()
     printf("\n");
     printf("\n");
     printf("Creation du tableau de jeu.");
-    fp = fopen("replayS.txt", "w");
+    fp = fopen("replays/replayS.txt", "w");
     sleep(1);
 }
 void createtab()
