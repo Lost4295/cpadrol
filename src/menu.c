@@ -13,7 +13,8 @@ void choices() {
 int main(int argc, char *argv[])
 {
     int choix;
-    while(true) {
+    int exit=1;
+    while(exit) {
         choices();
         scanf("%d", &choix);
         switch(choix)
@@ -23,16 +24,19 @@ int main(int argc, char *argv[])
                 time.sleep(2);
                 system("cls")                
                 system("p4s.exe")
+                exit = 0;
                 break
             case 2:
                 printf("Vous avez choisi Client\n");
                 time.sleep(2);
                 system("cls")
                 system("p4c.exe")
+                exit = 0;
                 break
             case 3:
                 printf("Vous avez choisi Quitter\n");
                 time.sleep(2);
+                exit = 0;
                 break;
         }
     }
