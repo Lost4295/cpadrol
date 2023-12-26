@@ -53,14 +53,46 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Erreur SDL_LoadBMP : %s", SDL_GetError());
         goto Quit;
     }
+
     texture2 = SDL_CreateTextureFromSurface(renderer, tmp);
+    Image(renderer, tmp, dst);
     SDL_FreeSurface(tmp); /* On libère la surface, on n’en a plus besoin */
     if (NULL == texture2)
     {
         fprintf(stderr, "Erreur SDL_CreateTextureFromSurface : %s", SDL_GetError());
         goto Quit;
     }
-    SDL_Delay(3000);
+
+    SDL_Event event;
+    SDL_bool quit = SDL_FALSE;
+    while(!quit)
+    {
+    SDL_WaitEvent(&event);
+    if(event.type == SDL_QUIT)
+        quit = SDL_TRUE;
+    else if(event.type == SDL_KEYDOWN)
+    {
+        if(event.key.keysym.scancode == SDL_SCANCODE_UP)
+            printf("scancode up\n");
+        if(event.key.keysym.sym == SDLK_UP)
+            printf("keysym up\n");
+        if(event.key.keysym.scancode == SDL_SCANCODE_DOWN)
+            printf("scancode down\n");
+        if(event.key.keysym.sym == SDLK_DOWN)
+            printf("keysym down\n");
+                if(event.key.keysym.scancode == SDL_SCANCODE_LEFT)
+            printf("scancode left\n");
+        if(event.key.keysym.sym == SDLK_LEFT)
+            printf("keysym left\n");
+        if(event.key.keysym.scancode == SDL_SCANCODE_RIGHT)
+            printf("scancode RIGHT\n");
+        if(event.key.keysym.sym == SDLK_RIGHT)
+            printf("keysym RIGHT\n");
+        if (event.key.keysym.sym == SDLK_ESCAPE)
+            quit = SDL_TRUE;
+    }
+    SDL_Delay(20);
+}
 
 Quit:
     if (NULL != texture)
@@ -71,4 +103,24 @@ Quit:
         SDL_DestroyWindow(window);
     SDL_Quit();
     return statut;
+}
+
+int Image(SDL_Renderer *renderer, SDL_Surface *image, SDL_Rect img_dst)
+{
+    if (!image)
+    {
+        fprintf(stderr, "Erreur Image : %s\n", SDL_GetError());
+        return 0;
+    }
+ 
+    SDL_Texture *image_texture = NULL;
+ 
+    image_texture = SDL_CreateTextureFromSurface(renderer, image);
+    SDL_FreeSurface(image);
+ 
+    SDL_RenderCopy(renderer, image_texture , NULL, &img_dst);
+ 
+    SDL_RenderPresent(renderer);
+
+    return 0;
 }

@@ -43,6 +43,8 @@ int setWindowColor(SDL_Renderer *renderer, SDL_Color color)
         return -1;
     if (SDL_RenderClear(renderer) < 0)
         return -1;
+    SDL_RenderFillRect(renderer, NULL);
+    SDL_RenderPresent(renderer);
     return 0;
 }
 
@@ -55,25 +57,79 @@ int main(int argc, char *argv[])
 {
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
+    SDL_Texture *texture = NULL;
+    SDL_Rect rect = {100, 100, 100, 100}, dst = {0, 0, 0, 0};
     int statut = EXIT_FAILURE;
 
-    if (init(&window, &renderer, 640, 480) < 0) {
+    if (init(&window, &renderer, 640, 480) < 0)
+    {
         goto Quit;
     }
     /* On fait toutes nos initialisations ici */
     SDL_RenderClear(renderer);
-    SDL_SetRenderDrawColor(renderer, 255, 128, 0, 128);
-    SDL_RenderFillRect(renderer, NULL);
+    SDL_Color white_color = {255, 255, 255, 255};
+    setWindowColor(renderer, white_color);
     SDL_Delay(1000);
-    SDL_RenderPresent(renderer);
-    loadImage("test.bmp", renderer);
+    texture = loadImage("test.bmp", renderer);
     SDL_Delay(1000);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(renderer, 0, 225, 0, 255);
     SDL_RenderClear(renderer);
+    SDL_RenderPresent(renderer);
+    SDL_Delay(1000);
+    SDL_RenderCopy(renderer, texture, NULL, &rect);
     SDL_RenderPresent(renderer);
     SDL_Delay(1000);
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     SDL_Delay(1000);
+
+    SDL_Event event;
+    SDL_bool quit = SDL_FALSE;
+    while (!quit)
+    {
+        SDL_WaitEvent(&event);
+        if (event.type == SDL_QUIT)
+            quit = SDL_TRUE;
+        else if (event.type == SDL_KEYDOWN)
+        {
+            switch (event.key.keysym.scancode)
+            {
+            case SDL_SCANCODE_UP:
+                printf("scancode up\n");
+                rect.y -= 10;
+                SDL_RenderClear(renderer);
+                SDL_RenderCopy(renderer, texture, NULL, &rect);
+                SDL_RenderPresent(renderer);
+                break;
+            case SDL_SCANCODE_DOWN:
+                printf("scancode down\n");
+                rect.y += 10;
+                SDL_RenderClear(renderer);
+                SDL_RenderCopy(renderer, texture, NULL, &rect);
+                SDL_RenderPresent(renderer);
+                break;
+            case SDL_SCANCODE_LEFT:
+                printf("scancode left\n");
+                rect.x -= 10;
+                SDL_RenderClear(renderer);
+                SDL_RenderCopy(renderer, texture, NULL, &rect);
+                SDL_RenderPresent(renderer);
+                break;
+            case SDL_SCANCODE_RIGHT:
+                printf("scancode right\n");
+                rect.x += 10;
+                SDL_RenderClear(renderer);
+                SDL_RenderCopy(renderer, texture, NULL, &rect);
+                SDL_RenderPresent(renderer);
+                break;
+            case SDL_SCANCODE_ESCAPE:
+                quit = SDL_TRUE;
+                break;
+            default:
+                break;
+            }
+        }
+        SDL_Delay(20);
+    }
     statut = EXIT_SUCCESS;
 
     /* On libère toutes nos ressources ici et on fait notre return*/
