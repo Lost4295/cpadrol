@@ -1,4 +1,6 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -12,6 +14,16 @@ int init(SDL_Window **window, SDL_Renderer **renderer, int w, int h)
     if (0 != SDL_CreateWindowAndRenderer(w, h, SDL_WINDOW_SHOWN, window, renderer))
     {
         fprintf(stderr, "Erreur SDL_CreateWindowAndRenderer : %s", SDL_GetError());
+        return -1;
+    }
+    if (TTF_Init() < 0)
+    {
+        fprintf(stderr, "Erreur TTF_Init : %s", TTF_GetError());
+        return -1;
+    }
+    if (IMG_Init(IMG_INIT_PNG | IMG_INIT_PNG | IMG_INIT_WEBP) < 0)
+    {
+        fprintf(stderr, "Erreur IMG_Init : %s", IMG_GetError());
         return -1;
     }
     return 0;
@@ -48,23 +60,40 @@ int setWindowColor(SDL_Renderer *renderer, SDL_Color color)
     return 0;
 }
 
-Uint32 couleur(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-{
-    return r << 24 | g << 16 | b << 8 | a;
-}
 
+void printText(TTF_Font *font, SDL_Renderer *renderer, SDL_Color color, char * texte)
+{
+    SDL_Surface *text;
+
+    text = TTF_RenderText_Solid(font, texte, color);
+    if (!text)
+    {
+        printf("Failed to render text: %s\n", TTF_GetError());
+    }
+    SDL_Texture *text_texture;
+    text_texture = SDL_CreateTextureFromSurface(renderer, text);
+    SDL_Rect dest = {0, 0, text->w, text->h};
+    SDL_RenderCopy(renderer, text_texture, NULL, &dest);
+}
 int main(int argc, char *argv[])
 {
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
     SDL_Texture *texture = NULL;
+    SDL_Texture *text;
+    TTF_Font *font;
+
     SDL_Rect rect = {100, 100, 100, 100}, dst = {0, 0, 0, 0};
     int statut = EXIT_FAILURE;
-
     if (init(&window, &renderer, 640, 480) < 0)
     {
         goto Quit;
     }
+    font = TTF_OpenFont("Roboto.ttf", 72);
+	if ( !font ) {
+		printf("Error loading font: %s\n",TTF_GetError());
+		return -1;
+	}
     /* On fait toutes nos initialisations ici */
     SDL_RenderClear(renderer);
     SDL_Color white_color = {255, 255, 255, 255};
@@ -124,6 +153,11 @@ int main(int argc, char *argv[])
             case SDL_SCANCODE_ESCAPE:
                 quit = SDL_TRUE;
                 break;
+            case SDL_SCANCODE_SPACE:
+                SDL_RenderClear(renderer);
+                printText(font, renderer, white_color, "Hello World !");
+                SDL_RenderPresent(renderer);
+                break;
             default:
                 break;
             }
@@ -136,8 +170,13 @@ int main(int argc, char *argv[])
 Quit:
     if (NULL != renderer)
         SDL_DestroyRenderer(renderer);
+    if (NULL != texture)
+        SDL_DestroyTexture(texture);
     if (NULL != window)
         SDL_DestroyWindow(window);
+    TTF_CloseFont(font);
+    TTF_Quit();
     SDL_Quit();
     return statut;
 }
+
