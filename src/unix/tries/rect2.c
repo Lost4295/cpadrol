@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+int c = 1;
+int *pc = &c;
 int SDL_RenderFillCircle(SDL_Renderer *renderer, int x, int y, int radius)
 {
     int offsetx, offsety, d;
@@ -50,6 +52,7 @@ int SDL_RenderFillCircle(SDL_Renderer *renderer, int x, int y, int radius)
 
     return status;
 }
+int tableau[6][7];
 int main(int argc, char *args[])
 {
     SDL_Window *win;
@@ -76,11 +79,80 @@ int main(int argc, char *args[])
         SDL_Quit();
         return EXIT_FAILURE;
     }
-
-    SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 147, 172, 234, 145);
     SDL_RenderFillRect(renderer, NULL);
     SDL_RenderPresent(renderer);
+    createTableau(renderer);
+
+    SDL_Event event;
+    SDL_bool quit = SDL_FALSE;
+    int num = 0;
+    while (!quit)
+    {
+        SDL_WaitEvent(&event);
+        if (event.type == SDL_QUIT)
+            quit = SDL_TRUE;
+        else if (event.type == SDL_KEYDOWN)
+        {
+            switch (event.key.keysym.scancode)
+            {
+            case SDL_SCANCODE_LEFT:
+                (num == 0) ? num = 6 : num--;
+                printf("scancode left : num = %d\n", num);
+                loadTableau(renderer);
+                makeChooseCircle(renderer, num);
+                break;
+            case SDL_SCANCODE_RIGHT:
+                (num == 6) ? num = 0 : num++;
+                printf("scancode right : num = %d\n",num);
+                loadTableau(renderer);
+                makeChooseCircle(renderer, num);
+                break;
+            case SDL_SCANCODE_ESCAPE:
+                quit = SDL_TRUE;
+                break;
+            case SDL_SCANCODE_SPACE:
+                SDL_RenderClear(renderer);
+                loadTableau(renderer);
+                InsertCoin(renderer, num);
+                SDL_RenderPresent(renderer);
+                break;
+            case SDL_SCANCODE_J:
+                SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+                break;
+            case SDL_SCANCODE_R:
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+                break;
+            default:
+                break;
+            }
+        }
+        SDL_Delay(20);
+    }
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(win);
+    SDL_Quit();
+
+    return EXIT_SUCCESS;
+}
+
+int makeChooseCircle(SDL_Renderer *renderer, int num)
+{
+    SDL_SetRenderDrawColor(renderer, 83, 28, 125, 14);
+    SDL_RenderFillCircle(renderer, num * 50 + 25, 6 * 50 + 25, 5);
+    SDL_RenderPresent(renderer);
+}
+int createTableau(SDL_Renderer *renderer)
+{
+
+    for (int i = 0; i < 6; i++)
+    {
+        for (int j = 0; j < 7; j++)
+        {
+            tableau[i][j] = 0;
+        }
+    }
+    SDL_RenderClear(renderer);
     SDL_Rect multi_rect1[7];
     SDL_Rect multi_rect2[7];
     SDL_Rect multi_rect3[7];
@@ -154,28 +226,60 @@ int main(int argc, char *args[])
     SDL_RenderDrawLine(renderer, 350, 0, 350, 50 * 6);
     SDL_RenderPresent(renderer);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-
     for (int i = 0; i < 7; i++)
     {
         for (int j = 0; j < 6; j++)
         {
-            SDL_RenderFillCircle(renderer, i * 50+25, j * 50+25, 20);
-            SDL_Delay(70);
+            SDL_RenderFillCircle(renderer, i * 50 + 25, j * 50 + 25, 20);
         }
     }
     SDL_RenderPresent(renderer);
+}
 
-    SDL_Delay(3000);
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 145);
+int InsertCoin(SDL_Renderer *renderer, int num)
+{
+    int i;
+    for (i = 0; i <= 5; i++)
+    {
+        if (tableau[num][i] == 0)
+        {
+            tableau[num][i] = *pc;
+            break;
+        }
+    }
+    if (*pc == 1)
+    {
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    }
+    else if (*pc == 2)
+    {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+    }
+    SDL_RenderFillCircle(renderer, i * 50 + 25, num * 50 + 25, 20);
+    (*pc == 1) ? (*pc = 2) : (*pc = 1);
+}
 
-    SDL_RenderFillCircle(renderer, 6 * 50+25, 5 * 50+25, 20);
+int loadTableau(SDL_Renderer *renderer)
+{
+    createTableau(renderer);
+    for (int i = 0; i < 6; i++)
+    {
+        for (int j = 0; j < 7; j++)
+        {
+            if (tableau[i][j] == 1)
+            {
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+            }
+            else if (tableau[i][j] == 2)
+            {
+                SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+            }
+            else
+            {
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+            }
+            SDL_RenderFillCircle(renderer, i * 50 + 25, j * 50 + 25, 20);
+        }
+    }
     SDL_RenderPresent(renderer);
-    SDL_Delay(3000);
-
-
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(win);
-    SDL_Quit();
-
-    return EXIT_SUCCESS;
 }

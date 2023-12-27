@@ -52,8 +52,27 @@ int main(void)
                 break;
             case 'C':
                 printw("Option selected : %s\n\n", *options[select]);
+                switch (select)
+                {
+                case 0:
+                    printw("Let's play ! Hahahaha \n\n\n");
+                    break;
+                case 1:
+                    printw("Multiplayer play !!!!\n\n\n");
+                    break;
+                case 2:
+                    printw("Here are the options.\n\n");
+                    break;
+                case 3:
+                    printw("Goodbye !\n\n");
+                    goto end;
+                    break;
+                default:
+                    break;
+                }
                 break;
             case 'D':
+            end:
                 // code for arrow left
                 endwin();
                 exit = 1;
