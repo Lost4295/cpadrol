@@ -61,7 +61,7 @@ int setWindowColor(SDL_Renderer *renderer, SDL_Color color)
 }
 
 
-void printText(TTF_Font *font, SDL_Renderer *renderer, SDL_Color color, char * texte)
+void printText(TTF_Font *font, SDL_Renderer *renderer, SDL_Color color, char * texte, SDL_Rect *dest)
 {
     SDL_Surface *text;
 
@@ -71,9 +71,11 @@ void printText(TTF_Font *font, SDL_Renderer *renderer, SDL_Color color, char * t
         printf("Failed to render text: %s\n", TTF_GetError());
     }
     SDL_Texture *text_texture;
+    SDL_Rect destn = {0, 0, text->w, text->h};
+    destn.x = dest->x;
+    destn.y = dest->y;
     text_texture = SDL_CreateTextureFromSurface(renderer, text);
-    SDL_Rect dest = {0, 0, text->w, text->h};
-    SDL_RenderCopy(renderer, text_texture, NULL, &dest);
+    SDL_RenderCopy(renderer, text_texture, NULL, &destn);
 }
 int main(int argc, char *argv[])
 {
@@ -81,7 +83,7 @@ int main(int argc, char *argv[])
     SDL_Renderer *renderer = NULL;
     SDL_Texture *texture = NULL;
     SDL_Texture *text;
-    TTF_Font *font;
+    TTF_Font *font,*tfont; 
 
     SDL_Rect rect = {100, 100, 100, 100}, dst = {0, 0, 0, 0};
     int statut = EXIT_FAILURE;
@@ -89,7 +91,8 @@ int main(int argc, char *argv[])
     {
         goto Quit;
     }
-    font = TTF_OpenFont("Roboto.ttf", 25);
+    font = TTF_OpenFont("Roboto.ttf", 32);
+    tfont = TTF_OpenFont("Roboto.ttf", 50);
 	if ( !font ) {
 		printf("Error loading font: %s\n",TTF_GetError());
 		return -1;
@@ -98,19 +101,18 @@ int main(int argc, char *argv[])
     SDL_RenderClear(renderer);
     SDL_Color white_color = {255, 255, 255, 255};
     SDL_Color black_color = {0, 0, 0, 255};
-    setWindowColor(renderer, white_color);
-    SDL_Delay(1000);
-    texture = loadImage("test.bmp", renderer);
-    SDL_Delay(1000);
-    SDL_SetRenderDrawColor(renderer, 0, 225, 0, 255);
+    SDL_Color yellow_color = {255, 255, 0, 255};
+    setWindowColor(renderer, black_color);
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
     SDL_Delay(1000);
-    SDL_RenderCopy(renderer, texture, NULL, &rect);
-    SDL_RenderPresent(renderer);
-    SDL_Delay(1000);
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-    SDL_Delay(1000);
+    SDL_Rect title = {200, 20, 100, 100};
+    SDL_Rect rect2 = {50, 140, 100, 100};
+    SDL_Rect rect3 = {50, 220, 100, 100};
+    SDL_Rect rect4 = {50, 300, 100, 100};
+    SDL_Rect rect5 = {50, 380, 100, 100};
+
+    int menu[4] = {0,1,2,3};
 
     SDL_Event event;
     SDL_bool quit = SDL_FALSE;
@@ -127,37 +129,42 @@ int main(int argc, char *argv[])
                 printf("scancode up\n");
                 rect.y -= 10;
                 SDL_RenderClear(renderer);
-                SDL_RenderCopy(renderer, texture, NULL, &rect);
+                printText(tfont, renderer, white_color, "Hello World !", &title);
+                printText(font, renderer, white_color, "Hello World !", &rect2);
+                printText(font, renderer, white_color, "Hello World !", &rect3);
+                printText(font, renderer, white_color, "Hello World !", &rect4);
+                printText(font, renderer, white_color, "Hello World !", &rect5);
                 SDL_RenderPresent(renderer);
                 break;
             case SDL_SCANCODE_DOWN:
                 printf("scancode down\n");
                 rect.y += 10;
                 SDL_RenderClear(renderer);
-                SDL_RenderCopy(renderer, texture, NULL, &rect);
+                printText(tfont, renderer, white_color, "Hello World !", &title);
+                printText(font, renderer, white_color, "Hello World !", &rect2);
+                printText(font, renderer, white_color, "Hello World !", &rect3);
+                printText(font, renderer, white_color, "Hello World !", &rect4);
+                printText(font, renderer, white_color, "Hello World !", &rect5);
                 SDL_RenderPresent(renderer);
                 break;
             case SDL_SCANCODE_LEFT:
                 printf("scancode left\n");
                 rect.x -= 10;
-                SDL_RenderClear(renderer);
-                SDL_RenderCopy(renderer, texture, NULL, &rect);
-                SDL_RenderPresent(renderer);
                 break;
             case SDL_SCANCODE_RIGHT:
                 printf("scancode right\n");
                 rect.x += 10;
-                SDL_RenderClear(renderer);
-                SDL_RenderCopy(renderer, texture, NULL, &rect);
-                SDL_RenderPresent(renderer);
                 break;
             case SDL_SCANCODE_ESCAPE:
                 quit = SDL_TRUE;
                 break;
             case SDL_SCANCODE_SPACE:
                 SDL_RenderClear(renderer);
-                printText(font, renderer, white_color, "Hello World !");
                 SDL_RenderPresent(renderer);
+                break;
+            case SDL_SCANCODE_BACKSPACE:
+                printText(font, renderer, white_color, "Hello World !", &rect);
+                printf("x : %d ; y : %d\n", rect.x, rect.y);
                 break;
             default:
                 break;
