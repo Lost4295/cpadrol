@@ -193,8 +193,10 @@ void printtab()
             } else {
                 printf("| %s%c%s ", NOIR,32, END);
             }
+            
         }
         printf("|\t%s|%s\n", BLEU, END);
+
     }
     printf("%s ===============================%s\n", BLEU, END);
 }
