@@ -94,18 +94,18 @@ void DrawCircle(SDL_Renderer *renderer, int32_t centreX, int32_t centreY, int32_
     }
 }
 
-int
-SDL_RenderDrawCircle(SDL_Renderer * renderer, int x, int y, int radius)
+int SDL_RenderDrawCircle(SDL_Renderer *renderer, int x, int y, int radius)
 {
     int offsetx, offsety, d;
     int status;
 
     offsetx = 0;
     offsety = radius;
-    d = radius -1;
+    d = radius - 1;
     status = 0;
 
-    while (offsety >= offsetx) {
+    while (offsety >= offsetx)
+    {
         status += SDL_RenderDrawPoint(renderer, x + offsetx, y + offsety);
         status += SDL_RenderDrawPoint(renderer, x + offsety, y + offsetx);
         status += SDL_RenderDrawPoint(renderer, x - offsetx, y + offsety);
@@ -115,20 +115,24 @@ SDL_RenderDrawCircle(SDL_Renderer * renderer, int x, int y, int radius)
         status += SDL_RenderDrawPoint(renderer, x - offsetx, y - offsety);
         status += SDL_RenderDrawPoint(renderer, x - offsety, y - offsetx);
 
-        if (status < 0) {
+        if (status < 0)
+        {
             status = -1;
             break;
         }
 
-        if (d >= 2*offsetx) {
-            d -= 2*offsetx + 1;
-            offsetx +=1;
+        if (d >= 2 * offsetx)
+        {
+            d -= 2 * offsetx + 1;
+            offsetx += 1;
         }
-        else if (d < 2 * (radius - offsety)) {
+        else if (d < 2 * (radius - offsety))
+        {
             d += 2 * offsety - 1;
             offsety -= 1;
         }
-        else {
+        else
+        {
             d += 2 * (offsety - offsetx - 1);
             offsety -= 1;
             offsetx += 1;
@@ -138,19 +142,18 @@ SDL_RenderDrawCircle(SDL_Renderer * renderer, int x, int y, int radius)
     return status;
 }
 
-
-int
-SDL_RenderFillCircle(SDL_Renderer * renderer, int x, int y, int radius)
+int SDL_RenderFillCircle(SDL_Renderer *renderer, int x, int y, int radius)
 {
     int offsetx, offsety, d;
     int status;
 
     offsetx = 0;
     offsety = radius;
-    d = radius -1;
+    d = radius - 1;
     status = 0;
 
-    while (offsety >= offsetx) {
+    while (offsety >= offsetx)
+    {
 
         status += SDL_RenderDrawLine(renderer, x - offsety, y + offsetx,
                                      x + offsety, y + offsetx);
@@ -161,20 +164,24 @@ SDL_RenderFillCircle(SDL_Renderer * renderer, int x, int y, int radius)
         status += SDL_RenderDrawLine(renderer, x - offsety, y - offsetx,
                                      x + offsety, y - offsetx);
 
-        if (status < 0) {
+        if (status < 0)
+        {
             status = -1;
             break;
         }
 
-        if (d >= 2*offsetx) {
-            d -= 2*offsetx + 1;
-            offsetx +=1;
+        if (d >= 2 * offsetx)
+        {
+            d -= 2 * offsetx + 1;
+            offsetx += 1;
         }
-        else if (d < 2 * (radius - offsety)) {
+        else if (d < 2 * (radius - offsety))
+        {
             d += 2 * offsety - 1;
             offsety -= 1;
         }
-        else {
+        else
+        {
             d += 2 * (offsety - offsetx - 1);
             offsety -= 1;
             offsetx += 1;
@@ -230,35 +237,22 @@ int main(int argc, char *argv[])
     SDL_Color blue_color = {0, 0, 150, 255};
     SDL_Color red_color = {255, 0, 0, 255};
     setWindowColor(renderer, blue_color);
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
-    SDL_Delay(1000);
-    setWindowColor(renderer, yellow_color);
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
-    SDL_Delay(1000);
-    setWindowColor(renderer, black_color);
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
-    SDL_Delay(1000);
-    setWindowColor(renderer, red_color);
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
-    SDL_Delay(1000);
 
-    // TODO : Dessiner un ovale / Rond
-    //  TODO : Gestion de l'input (voire même ouvrir un fichier depuis gestionnaire)
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderDrawRect(renderer, &rect);
-    SDL_RenderFillRect(renderer, &rect);
-    SDL_SetRenderDrawColor(renderer, 225, 225, 0, 255);
-    SDL_RenderFillCircle(renderer, 320,240,50);
-    SDL_RenderFillCircle(renderer, 150,150,45);
-    // DrawCircle(renderer, (int32_t)320,(int32_t)240, 50);
-    SDL_RenderPresent(renderer);
-    SDL_Delay(3000);
-
-
+    SDL_Event event;
+    SDL_bool quit = SDL_FALSE;
+    while (!quit)
+    {
+        SDL_bool renderText = SDL_FALSE;
+        while (SDL_PollEvent(&event) != 0)
+        {
+            if (event.key.keysym.scancode != SDL_GetScancodeFromKey(event.key.keysym.sym))
+            {
+                SDL_Log("Physical %s key acting as %s key",
+                        SDL_GetScancodeName(event.key.keysym.scancode),
+                        SDL_GetKeyName(event.key.keysym.sym));
+            }
+        }
+    }
     statut = EXIT_SUCCESS;
 
     /* On libère toutes nos ressources ici et on fait notre return*/
