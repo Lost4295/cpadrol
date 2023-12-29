@@ -294,7 +294,7 @@ int main(int argc, char *args[])
         return EXIT_FAILURE;
     }
 
-    win = SDL_CreateWindow("Hello World!", 100, 100, 400, 400, SDL_WINDOW_SHOWN);
+    win = SDL_CreateWindow("Hello World!", 100, 100, 400, 400, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     if (win == NULL)
     {
         fprintf(stderr, "SDL_CreateWindow Error: %s\n", SDL_GetError());
@@ -322,6 +322,8 @@ int main(int argc, char *args[])
     SDL_Delay(500);
 
     createTableau(renderer);
+
+    SDL_bool resized = SDL_FALSE;
 
     SDL_Event event;
     SDL_bool quit = SDL_FALSE;
@@ -370,6 +372,20 @@ int main(int argc, char *args[])
             default:
                 break;
             }
+        }
+        else if (event.type == SDL_WINDOWEVENT_RESIZED || event.type == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            resized = SDL_TRUE;
+            printf("resize !!\n");
+        }
+        if (resized == SDL_TRUE)
+        {
+            resized = SDL_FALSE;
+            int * width, *height;
+            SDL_GetWindowSize(win, width, height);
+            SDL_RenderClear(renderer);
+            SDL_UpdateWindowSurface(win);
+            SDL_RenderPresent(renderer);
         }
         SDL_Delay(20);
     }

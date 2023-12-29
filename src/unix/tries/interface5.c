@@ -1,190 +1,299 @@
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 
-int init(SDL_Window **window, SDL_Renderer **renderer, int w, int h)
+const int SCREEN_WIDTH = 640;
+const int SCREEN_HEIGHT = 480;
+
+typedef struct
 {
-    if (0 != SDL_Init(SDL_INIT_VIDEO))
-    {
-        fprintf(stderr, "Erreur SDL_Init : %s", SDL_GetError());
-        return -1;
-    }
-    if (0 != SDL_CreateWindowAndRenderer(w, h, SDL_WINDOW_SHOWN, window, renderer))
-    {
-        fprintf(stderr, "Erreur SDL_CreateWindowAndRenderer : %s", SDL_GetError());
-        return -1;
-    }
-    if (TTF_Init() < 0)
-    {
-        fprintf(stderr, "Erreur TTF_Init : %s", TTF_GetError());
-        return -1;
-    }
-    if (IMG_Init(IMG_INIT_PNG | IMG_INIT_PNG | IMG_INIT_WEBP) < 0)
-    {
-        fprintf(stderr, "Erreur IMG_Init : %s", IMG_GetError());
-        return -1;
-    }
-    return 0;
-}
+	SDL_Texture* mTexture;
+	int mWidth;
+	int mHeight;
+} LTexture;
 
-SDL_Texture *loadImage(const char path[], SDL_Renderer *renderer)
+bool init();
+bool loadMedia();
+void close();
+
+SDL_Window* gWindow = NULL;
+SDL_Renderer* gRenderer = NULL;
+TTF_Font* gFont = NULL;
+
+LTexture gPromptTextTexture;
+LTexture gInputTextTexture;
+
+void LTexture_free(LTexture* texture)
 {
-    SDL_Surface *tmp = NULL;
-    SDL_Texture *texture = NULL;
-    tmp = SDL_LoadBMP(path);
-    if (NULL == tmp)
-    {
-        fprintf(stderr, "Erreur SDL_LoadBMP : %s", SDL_GetError());
-        return NULL;
-    }
-    texture = SDL_CreateTextureFromSurface(renderer, tmp);
-    SDL_FreeSurface(tmp);
-    if (NULL == texture)
-    {
-        fprintf(stderr, "Erreur SDL_CreateTextureFromSurface : %s", SDL_GetError());
-        return NULL;
-    }
-    return texture;
-}
-
-int setWindowColor(SDL_Renderer *renderer, SDL_Color color)
-{
-    if (SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a) < 0)
-        return -1;
-    if (SDL_RenderClear(renderer) < 0)
-        return -1;
-    SDL_RenderFillRect(renderer, NULL);
-    SDL_RenderPresent(renderer);
-    return 0;
-}
-
-
-void printText(TTF_Font *font, SDL_Renderer *renderer, SDL_Color color, char * texte, SDL_Rect *dest)
-{
-    SDL_Surface *text;
-
-    text = TTF_RenderText_Solid(font, texte, color);
-    if (!text)
-    {
-        printf("Failed to render text: %s\n", TTF_GetError());
-    }
-    SDL_Texture *text_texture;
-    SDL_Rect destn = {0, 0, text->w, text->h};
-    destn.x = dest->x;
-    destn.y = dest->y;
-    text_texture = SDL_CreateTextureFromSurface(renderer, text);
-    SDL_RenderCopy(renderer, text_texture, NULL, &destn);
-}
-int main(int argc, char *argv[])
-{
-    SDL_Window *window = NULL;
-    SDL_Renderer *renderer = NULL;
-    SDL_Texture *texture = NULL;
-    SDL_Texture *text;
-    TTF_Font *font,*tfont; 
-
-    SDL_Rect rect = {100, 100, 100, 100}, dst = {0, 0, 0, 0};
-    int statut = EXIT_FAILURE;
-    if (init(&window, &renderer, 640, 480) < 0)
-    {
-        goto Quit;
-    }
-    font = TTF_OpenFont("Roboto.ttf", 32);
-    tfont = TTF_OpenFont("Roboto.ttf", 50);
-	if ( !font ) {
-		printf("Error loading font: %s\n",TTF_GetError());
-		return -1;
+	if (texture->mTexture != NULL)
+	{
+		SDL_DestroyTexture(texture->mTexture);
+		texture->mTexture = NULL;
+		texture->mWidth = 0;
+		texture->mHeight = 0;
 	}
-    /* On fait toutes nos initialisations ici */
-    SDL_RenderClear(renderer);
-    SDL_Color white_color = {255, 255, 255, 255};
-    SDL_Color black_color = {0, 0, 0, 255};
-    SDL_Color yellow_color = {255, 255, 0, 255};
-    setWindowColor(renderer, black_color);
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
-    SDL_Delay(1000);
-    SDL_Rect title = {200, 20, 100, 100};
-    SDL_Rect rect2 = {50, 140, 100, 100};
-    SDL_Rect rect3 = {50, 220, 100, 100};
-    SDL_Rect rect4 = {50, 300, 100, 100};
-    SDL_Rect rect5 = {50, 380, 100, 100};
-
-    int menu[4] = {0,1,2,3};
-
-    SDL_Event event;
-    SDL_bool quit = SDL_FALSE;
-    while (!quit)
-    {
-        SDL_WaitEvent(&event);
-        if (event.type == SDL_QUIT)
-            quit = SDL_TRUE;
-        else if (event.type == SDL_KEYDOWN)
-        {
-            switch (event.key.keysym.scancode)
-            {
-            case SDL_SCANCODE_UP:
-                printf("scancode up\n");
-                rect.y -= 10;
-                SDL_RenderClear(renderer);
-                printText(tfont, renderer, white_color, "Hello World !", &title);
-                printText(font, renderer, white_color, "Hello World !", &rect2);
-                printText(font, renderer, white_color, "Hello World !", &rect3);
-                printText(font, renderer, white_color, "Hello World !", &rect4);
-                printText(font, renderer, white_color, "Hello World !", &rect5);
-                SDL_RenderPresent(renderer);
-                break;
-            case SDL_SCANCODE_DOWN:
-                printf("scancode down\n");
-                rect.y += 10;
-                SDL_RenderClear(renderer);
-                printText(tfont, renderer, white_color, "Hello World !", &title);
-                printText(font, renderer, white_color, "Hello World !", &rect2);
-                printText(font, renderer, white_color, "Hello World !", &rect3);
-                printText(font, renderer, white_color, "Hello World !", &rect4);
-                printText(font, renderer, white_color, "Hello World !", &rect5);
-                SDL_RenderPresent(renderer);
-                break;
-            case SDL_SCANCODE_LEFT:
-                printf("scancode left\n");
-                rect.x -= 10;
-                break;
-            case SDL_SCANCODE_RIGHT:
-                printf("scancode right\n");
-                rect.x += 10;
-                break;
-            case SDL_SCANCODE_ESCAPE:
-                quit = SDL_TRUE;
-                break;
-            case SDL_SCANCODE_SPACE:
-                SDL_RenderClear(renderer);
-                SDL_RenderPresent(renderer);
-                break;
-            case SDL_SCANCODE_BACKSPACE:
-                printText(font, renderer, white_color, "Hello World !", &rect);
-                printf("x : %d ; y : %d\n", rect.x, rect.y);
-                break;
-            default:
-                break;
-            }
-        }
-        SDL_Delay(20);
-    }
-    statut = EXIT_SUCCESS;
-
-    /* On libère toutes nos ressources ici et on fait notre return*/
-Quit:
-    if (NULL != renderer)
-        SDL_DestroyRenderer(renderer);
-    if (NULL != texture)
-        SDL_DestroyTexture(texture);
-    if (NULL != window)
-        SDL_DestroyWindow(window);
-    TTF_CloseFont(font);
-    TTF_Quit();
-    SDL_Quit();
-    return statut;
 }
+
+bool LTexture_loadFromFile(LTexture* texture, const char* path)
+{
+	LTexture_free(texture);
+
+	SDL_Texture* newTexture = NULL;
+
+	SDL_Surface* loadedSurface = IMG_Load(path);
+	if (loadedSurface == NULL)
+	{
+		printf("Unable to load image %s! SDL_image Error: %s\n", path, IMG_GetError());
+	}
+	else
+	{
+		SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0, 0xFF, 0xFF));
+
+		newTexture = SDL_CreateTextureFromSurface(gRenderer, loadedSurface);
+		if (newTexture == NULL)
+		{
+			printf("Unable to create texture from %s! SDL Error: %s\n", path, SDL_GetError());
+		}
+		else
+		{
+			texture->mWidth = loadedSurface->w;
+			texture->mHeight = loadedSurface->h;
+		}
+
+		SDL_FreeSurface(loadedSurface);
+	}
+
+	texture->mTexture = newTexture;
+	return texture->mTexture != NULL;
+}
+
+#if defined(SDL_TTF_MAJOR_VERSION)
+bool LTexture_loadFromRenderedText(LTexture* texture, const char* textureText, SDL_Color textColor)
+{
+	LTexture_free(texture);
+
+	SDL_Surface* textSurface = TTF_RenderText_Solid(gFont, textureText, textColor);
+	if (textSurface != NULL)
+	{
+		texture->mTexture = SDL_CreateTextureFromSurface(gRenderer, textSurface);
+		if (texture->mTexture == NULL)
+		{
+			printf("Unable to create texture from rendered text! SDL Error: %s\n", SDL_GetError());
+		}
+		else
+		{
+			texture->mWidth = textSurface->w;
+			texture->mHeight = textSurface->h;
+		}
+
+		SDL_FreeSurface(textSurface);
+	}
+	else
+	{
+		printf("Unable to render text surface! SDL_ttf Error: %s\n", TTF_GetError());
+	}
+
+	return texture->mTexture != NULL;
+}
+#endif
+
+int LTexture_getWidth(LTexture* texture)
+{
+	return texture->mWidth;
+}
+
+int LTexture_getHeight(LTexture* texture)
+{
+	return texture->mHeight;
+}
+
+bool init()
+{
+	bool success = true;
+
+	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	{
+		printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
+		success = false;
+	}
+	else
+	{
+		if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1"))
+		{
+			printf("Warning: Linear texture filtering not enabled!");
+		}
+
+		gWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+		if (gWindow == NULL)
+		{
+			printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
+			success = false;
+		}
+		else
+		{
+			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+			if (gRenderer == NULL)
+			{
+				printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
+				success = false;
+			}
+			else
+			{
+				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+
+				int imgFlags = IMG_INIT_PNG;
+				if (!(IMG_Init(imgFlags) & imgFlags))
+				{
+					printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
+					success = false;
+				}
+
+				if (TTF_Init() == -1)
+				{
+					printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
+					success = false;
+				}
+			}
+		}
+	}
+
+	return success;
+}
+
+bool loadMedia()
+{
+	bool success = true;
+
+	gFont = TTF_OpenFont("32_text_input_and_clipboard_handling/lazy.ttf", 28);
+	if (gFont == NULL)
+	{
+		printf("Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
+		success = false;
+	}
+	else
+	{
+		SDL_Color textColor = { 0, 0, 0, 0xFF };
+		if (!LTexture_loadFromRenderedText(&gPromptTextTexture, "Enter Text:", textColor))
+		{
+			printf("Failed to render prompt text!\n");
+			success = false;
+		}
+	}
+
+	return success;
+}
+
+void close()
+{
+	LTexture_free(&gPromptTextTexture);
+	LTexture_free(&gInputTextTexture);
+
+	TTF_CloseFont(gFont);
+	gFont = NULL;
+
+	SDL_DestroyRenderer(gRenderer);
+	SDL_DestroyWindow(gWindow);
+	gWindow = NULL;
+	gRenderer = NULL;
+
+	TTF_Quit();
+	IMG_Quit();
+	SDL_Quit();
+}
+
+int main(int argc, char* args[])
+{
+	if (!init())
+	{
+		printf("Failed to initialize!\n");
+	}
+	else
+	{
+		if (!loadMedia())
+		{
+			printf("Failed to load media!\n");
+		}
+		else
+		{
+			bool quit = false;
+			SDL_Event e;
+			SDL_Color textColor = { 0, 0, 0, 0xFF };
+			char inputText[100] = "Some Text";
+			LTexture_loadFromRenderedText(&gInputTextTexture, inputText, textColor);
+			SDL_StartTextInput();
+
+			while (!quit)
+			{
+				bool renderText = false;
+
+				while (SDL_PollEvent(&e) != 0)
+				{
+					if (e.type == SDL_QUIT)
+					{
+						quit = true;
+					}
+					else if (e.type == SDL_KEYDOWN)
+					{
+						if (e.key.keysym.sym == SDLK_BACKSPACE && strlen(inputText) > 0)
+						{
+							inputText[strlen(inputText) - 1] = '\0';
+							renderText = true;
+						}
+						else if (e.key.keysym.sym == SDLK_c && SDL_GetModState() & KMOD_CTRL)
+						{
+							SDL_SetClipboardText(inputText);
+						}
+						else if (e.key.keysym.sym == SDLK_v && SDL_GetModState() & KMOD_CTRL)
+						{
+							char* tempText = SDL_GetClipboardText();
+							strcpy(inputText, tempText);
+							SDL_free(tempText);
+							renderText = true;
+						}
+					}
+					else if (e.type == SDL_TEXTINPUT)
+					{
+						if (!(SDL_GetModState() & KMOD_CTRL && (e.text.text[0] == 'c' || e.text.text[0] == 'C' || e.text.text[0] == 'v' || e.text.text[0] == 'V')))
+						{
+							strcat(inputText, e.text.text);
+							renderText = true;
+						}
+					}
+				}
+
+				if (renderText)
+				{
+					if (strlen(inputText) > 0)
+					{
+						LTexture_loadFromRenderedText(&gInputTextTexture, inputText, textColor);
+					}
+					else
+					{
+						LTexture_loadFromRenderedText(&gInputTextTexture, " ", textColor);
+					}
+				}
+
+				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+				SDL_RenderClear(gRenderer);
+
+				SDL_Rect promptRect = { (SCREEN_WIDTH - LTexture_getWidth(&gPromptTextTexture)) / 2, 0, LTexture_getWidth(&gPromptTextTexture), LTexture_getHeight(&gPromptTextTexture) };
+				SDL_Rect inputRect = { (SCREEN_WIDTH - LTexture_getWidth(&gInputTextTexture)) / 2, LTexture_getHeight(&gPromptTextTexture), LTexture_getWidth(&gInputTextTexture), LTexture_getHeight(&gInputTextTexture) };
+
+				SDL_RenderCopy(gRenderer, gPromptTextTexture.mTexture, NULL, &promptRect);
+				SDL_RenderCopy(gRenderer, gInputTextTexture.mTexture, NULL, &inputRect);
+
+				SDL_RenderPresent(gRenderer);
+			}
+
+			SDL_StopTextInput();
+		}
+	}
+
+	close();
+	return 0;
+}
+
 
