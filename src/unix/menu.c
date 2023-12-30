@@ -3,6 +3,7 @@
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
@@ -15,8 +16,10 @@ SDL_Rect authors = {0, 400, 100, 100};
 SDL_Color black_color = {0, 0, 0, 255};
 SDL_Color yellow_color = {255, 255, 0, 255};
 SDL_Color white_color = {255, 255, 255, 255};
+char inputText[50];
+
 int num = 0, nus = 0;
-int fplay = 0, freplay = 0, fsettings = 0, fmenu = 1;
+int fplay = 0, freplay = 0, fsettings = 0, fmenu = 0, fconfig = 1;
 char **menu[4];
 char **settingsmenu[3];
 char *play = "Play";
@@ -26,7 +29,24 @@ char *quit = "Quit";
 char *rtm = "Return to Menu";
 char *mscolor = "Modify Screen Color";
 char *mpseudo = "Modify Pseudo";
-
+void append(char *s, char c)
+{
+    int len = strlen(s);
+    s[len] = c;
+    s[len + 1] = '\0';
+}
+void pop(char *s)
+{
+    int len = strlen(s);
+    if (len > 0)
+    {
+        s[len - 1] = '\0';
+    }
+    else
+    {
+        printf("Cannot suppress : empty !");
+    }
+}
 int init(SDL_Window **window, SDL_Renderer **renderer, int w, int h)
 {
     if (0 != SDL_Init(SDL_INIT_VIDEO))
@@ -182,6 +202,53 @@ void print_settings_opts(TTF_Font *font, SDL_Renderer *renderer, int num)
     SDL_RenderPresent(renderer);
 }
 
+void print_pseudo_maker(TTF_Font *font, SDL_Renderer *renderer, char *texte)
+{
+    setWindowColor(renderer, black_color);
+    SDL_Rect rects[2];
+    rects[0].x = 200;
+    rects[1].x = 250;
+    rects[0].y = 140;
+    rects[1].y = 220;
+    rects[0].w = 100;
+    rects[1].w = 100;
+    rects[0].h = 100;
+    rects[1].h = 100;
+    printText(font, renderer, white_color, "Merci d'entrer votre pseudo.", &rects[0]);
+    printText(font, renderer, white_color, texte, &rects[1]);
+
+    SDL_RenderPresent(renderer);
+}
+void print_hello(TTF_Font *font, SDL_Renderer *renderer)
+{
+    SDL_Rect rect;
+    rect.x = 180;
+    rect.y = 10;
+    rect.w = 100;
+    rect.h = 100;
+    FILE *file = fopen("config.txt", "r");
+    char line[250];
+    char texte[250];
+    while (fgets(line, sizeof(line), file) != NULL)
+    {
+        char d[] = ":";
+        char n[] = "\n";
+        char *p = strtok(line, d);
+        p = strtok(NULL, d);
+        char *ps = strtok(p, n);
+        printf("text: %s\n", texte);
+        strcpy(texte, "Bonjour, ");
+        strcat(texte, ps);
+    }
+    printText(font, renderer, yellow_color, texte, &rect);
+
+    SDL_RenderPresent(renderer);
+}
+bool file_exists(const char *filename)
+{
+    return access(filename, 0) == 0;
+}
+
 int main()
 {
     menu[0] = &play;
@@ -221,107 +288,171 @@ int main()
     printText(lfont, renderer, black_color, "Realise par Mathis Vareilles, Ylan Turin--Kondi et Zacharie Roger", &authors);
     SDL_RenderPresent(renderer);
     SDL_Delay(3000);
-    print_menu_opts(font, renderer,num);
+    if (file_exists("config.txt"))
+    {
+        fconfig = 0;
+        fmenu = 1;
+    }
+    else
+    {
+        fconfig = 1;
+        fmenu = 0;
+    }
+    if (fmenu)
+    {
+        print_menu_opts(font, renderer, num);
+        print_hello(font, renderer);
+    }
+    else
+    {
+        SDL_StartTextInput();
+        print_pseudo_maker(font, renderer, " ");
+    }
     SDL_Event event;
     SDL_bool quit = SDL_FALSE;
     while (!quit)
     {
-        SDL_WaitEvent(&event);
+        SDL_bool renderText = SDL_FALSE;
+        SDL_PollEvent(&event);
         if (event.type == SDL_QUIT)
             quit = SDL_TRUE;
+        else if (event.type == SDL_TEXTINPUT)
+        {
+            // Append character
+            append(inputText, *event.text.text);
+            renderText = SDL_TRUE;
+        }
+        if (renderText)
+        {
+            // Text is not empty
+            if (strlen(inputText) > 0)
+            {
+                // Render new text
+                print_pseudo_maker(font, renderer, inputText);
+            }
+            // Text is empty
+            else
+            {
+                printf("Empty text\n");
+                // Render space texture
+                print_pseudo_maker(font, renderer, " ");
+            }
+        }
         else if (event.type == SDL_KEYDOWN)
         {
-            switch (event.key.keysym.scancode)
+            if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE || event.key.keysym.scancode == SDL_SCANCODE_DELETE)
             {
-            case SDL_SCANCODE_UP:
-                printf("scancode up\n");
-                if (fmenu)
+                printf("pop !");
+                pop(inputText);
+                renderText = SDL_TRUE;
+            }
+            else
+            {
+                switch (event.key.keysym.scancode)
                 {
-                    (num == 0) ? num = 3 : num--;
-                    print_menu_opts(font, renderer, num);
-                }
-                if (fsettings)
-                {
-                    (nus == 0) ? nus = 2 : nus--;
-                    print_settings_opts(font, renderer, nus);
-                }
-                break;
-            case SDL_SCANCODE_DOWN:
-                printf("scancode down\n");
-                if (fmenu)
-                {
-                    (num == 3) ? num = 0 : num++;
-                    print_menu_opts(font, renderer, num);
-                }
-                if (fsettings)
-                {
-                    (nus == 2) ? nus = 0 : nus++;
-                    print_settings_opts(font, renderer, nus);
-                }
-                break;
-            case SDL_SCANCODE_LEFT:
-                printf("scancode left\n");
-                break;
-            case SDL_SCANCODE_RIGHT:
-                printf("scancode right\n");
-                break;
-            case SDL_SCANCODE_ESCAPE:
-                // TODO: regarde ou est ce qu'on est et si c'est le dernier étage on quitte
-                quit = SDL_TRUE;
-                break;
-            case SDL_SCANCODE_RETURN:
-                if (fmenu)
-                {
-                    printf("You selected : %s\n", *menu[num]);
-                    switch (num)
+                case SDL_SCANCODE_UP:
+                    printf("scancode up\n");
+                    if (fmenu)
                     {
-                    case 0:
-                        break;
-                    case 1:
-                        freplay = 1;
-                        break;
-                    case 2:
-                        fmenu = 0;
-                        fsettings = 1;
-                        num=0;
-                        print_settings_opts(font, renderer, nus);
-                        break;
-                    case 3:
-                        goto Quit;
-                        break;
-                    default:
-                        break;
-                    }
-                }
-                else if (fsettings)
-                {
-                    printf("You selected : %s\n", *settingsmenu[nus]);
-                    switch (nus)
-                    {
-                    case 0:
-                        break;
-                    case 1:
-                        break;
-                    case 2:
-                        fmenu = 1;
-                        fsettings = 0;
-                        nus=0;
+                        (num == 0) ? num = 3 : num--;
                         print_menu_opts(font, renderer, num);
-                        break;
-                    default:
-                        break;
                     }
+                    if (fsettings)
+                    {
+                        (nus == 0) ? nus = 2 : nus--;
+                        print_settings_opts(font, renderer, nus);
+                    }
+                    break;
+                case SDL_SCANCODE_DOWN:
+                    printf("scancode down\n");
+                    if (fmenu)
+                    {
+                        (num == 3) ? num = 0 : num++;
+                        print_menu_opts(font, renderer, num);
+                    }
+                    if (fsettings)
+                    {
+                        (nus == 2) ? nus = 0 : nus++;
+                        print_settings_opts(font, renderer, nus);
+                    }
+                    break;
+                case SDL_SCANCODE_LEFT:
+                    printf("scancode left\n");
+                    break;
+                case SDL_SCANCODE_RIGHT:
+                    printf("scancode right\n");
+                    break;
+                case SDL_SCANCODE_ESCAPE:
+                    // TODO: regarde ou est ce qu'on est et si c'est le dernier étage on quitte
+                    quit = SDL_TRUE;
+                    break;
+                case SDL_SCANCODE_RETURN:
+                    if (fconfig)
+                    {
+                        FILE *fptr;
+                        printf("Wrinting '%s' into file\n", inputText);
+                        fptr = fopen("config.txt", "w");
+                        fprintf(fptr, "Pseudo:%s\n", inputText);
+                        fclose(fptr);
+                        fmenu = 1;
+                        fconfig = 0;
+                        print_menu_opts(font, renderer, num);
+                        SDL_StopTextInput();
+                    }
+                    else if (fmenu)
+                    {
+                        printf("You selected : %s\n", *menu[num]);
+                        switch (num)
+                        {
+                        case 0:
+                            break;
+                        case 1:
+                            freplay = 1;
+                            break;
+                        case 2:
+                            fmenu = 0;
+                            fsettings = 1;
+                            num = 0;
+                            print_settings_opts(font, renderer, nus);
+                            break;
+                        case 3:
+                            goto Quit;
+                            break;
+                        default:
+                            break;
+                        }
+                    }
+                    else if (fsettings)
+                    {
+                        printf("You selected : %s\n", *settingsmenu[nus]);
+                        switch (nus)
+                        {
+                        case 0:
+                            break;
+                        case 1:
+                            break;
+                        case 2:
+                            fmenu = 1;
+                            fsettings = 0;
+                            nus = 0;
+                            print_menu_opts(font, renderer, num);
+                            break;
+                        default:
+                            break;
+                        }
+                    }
+                    break;
+                default:
+                    break;
                 }
-                break;
-            default:
-                break;
             }
         }
         SDL_Delay(20);
     }
     statut = EXIT_SUCCESS;
 
-    /* On libère toutes nos ressources ici et on fait notre return*/
+    SDL_StopTextInput();
+/* On libère toutes nos ressources ici et on fait notre return*/
 Quit:
     if (NULL != renderer)
         SDL_DestroyRenderer(renderer);
