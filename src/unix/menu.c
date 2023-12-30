@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
@@ -204,7 +205,6 @@ void print_settings_opts(TTF_Font *font, SDL_Renderer *renderer, int num)
 
 void print_pseudo_maker(TTF_Font *font, SDL_Renderer *renderer, char *texte)
 {
-    setWindowColor(renderer, black_color);
     SDL_Rect rects[2];
     rects[0].x = 200;
     rects[1].x = 250;
@@ -216,9 +216,9 @@ void print_pseudo_maker(TTF_Font *font, SDL_Renderer *renderer, char *texte)
     rects[1].h = 100;
     printText(font, renderer, white_color, "Merci d'entrer votre pseudo.", &rects[0]);
     printText(font, renderer, white_color, texte, &rects[1]);
-
     SDL_RenderPresent(renderer);
 }
+
 void print_hello(TTF_Font *font, SDL_Renderer *renderer)
 {
     SDL_Rect rect;
@@ -234,16 +234,19 @@ void print_hello(TTF_Font *font, SDL_Renderer *renderer)
         char d[] = ":";
         char n[] = "\n";
         char *p = strtok(line, d);
-        p = strtok(NULL, d);
-        char *ps = strtok(p, n);
-        printf("text: %s\n", texte);
-        strcpy(texte, "Bonjour, ");
-        strcat(texte, ps);
+        if (strcmp(p, "Pseudo") == 0)
+        {
+            p = strtok(NULL, d);
+            char *ps = strtok(p, n);
+            strcpy(texte, "Bonjour, ");
+            strcat(texte, ps);
+        }
     }
     printText(font, renderer, yellow_color, texte, &rect);
 
     SDL_RenderPresent(renderer);
 }
+
 bool file_exists(const char *filename)
 {
     return access(filename, 0) == 0;
@@ -306,6 +309,7 @@ int main()
     else
     {
         SDL_StartTextInput();
+        setWindowColor(renderer, black_color);
         print_pseudo_maker(font, renderer, " ");
     }
     SDL_Event event;
@@ -316,7 +320,7 @@ int main()
         SDL_PollEvent(&event);
         if (event.type == SDL_QUIT)
             quit = SDL_TRUE;
-        else if (event.type == SDL_TEXTINPUT)
+        else if (event.type == SDL_TEXTINPUT && fconfig)
         {
             // Append character
             append(inputText, *event.text.text);
@@ -328,6 +332,7 @@ int main()
             if (strlen(inputText) > 0)
             {
                 // Render new text
+                setWindowColor(renderer, black_color);
                 print_pseudo_maker(font, renderer, inputText);
             }
             // Text is empty
@@ -335,12 +340,13 @@ int main()
             {
                 printf("Empty text\n");
                 // Render space texture
+                setWindowColor(renderer, black_color);
                 print_pseudo_maker(font, renderer, " ");
             }
         }
         else if (event.type == SDL_KEYDOWN)
         {
-            if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE || event.key.keysym.scancode == SDL_SCANCODE_DELETE)
+            if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE || event.key.keysym.scancode == SDL_SCANCODE_DELETE && fconfig)
             {
                 printf("pop !");
                 pop(inputText);
@@ -382,16 +388,42 @@ int main()
                 case SDL_SCANCODE_RIGHT:
                     printf("scancode right\n");
                     break;
+                case SDL_SCANCODE_S: // à enlever
+                    FILE *file = fopen("config.txt", "r");
+                    char line[250];
+                    char texte[250];
+                    int lc = 0;
+                    while (fgets(line, sizeof(line), file) != NULL)
+                    {
+                        printf("Settings file :\nLine %d :\n", lc);
+                        char d[] = ":";
+                        char n[] = "\n";
+                        printf("Content : '%s'\n", line);
+                        char *p = strtok(line, d);
+                        printf("Key : %s\n", p);
+                        p = strtok(NULL, d);
+                        char *ps = strtok(p, n);
+                        printf("Value : '%s'\n", ps);
+                    }
+                    break;
                 case SDL_SCANCODE_ESCAPE:
-                    // TODO: regarde ou est ce qu'on est et si c'est le dernier étage on quitte
-                    quit = SDL_TRUE;
+                    if (fmenu)
+                    {
+                        quit = SDL_TRUE;
+                    }
+                    else if (fsettings)
+                    {
+                        fmenu = 1;
+                        fsettings = 0;
+                        print_menu_opts(font, renderer, num);
+                    }
                     break;
                 case SDL_SCANCODE_RETURN:
                     if (fconfig)
                     {
                         FILE *fptr;
                         printf("Wrinting '%s' into file\n", inputText);
-                        fptr = fopen("config.txt", "w");
+                        fptr = fopen("config.txt", "w+");
                         fprintf(fptr, "Pseudo:%s\n", inputText);
                         fclose(fptr);
                         fmenu = 1;
@@ -401,7 +433,7 @@ int main()
                     }
                     else if (fmenu)
                     {
-                        printf("You selected : %s\n", *menu[num]);
+                        printf("You selected : %s\n", *menu[num]); // A enlever
                         switch (num)
                         {
                         case 0:
@@ -424,12 +456,16 @@ int main()
                     }
                     else if (fsettings)
                     {
-                        printf("You selected : %s\n", *settingsmenu[nus]);
+                        printf("You selected : %s\n", *settingsmenu[nus]); // A enlever
                         switch (nus)
                         {
                         case 0:
                             break;
                         case 1:
+                            fsettings = 0;
+                            fconfig=1;
+                            SDL_StartTextInput();
+                            print_pseudo_maker(font, renderer, " ");
                             break;
                         case 2:
                             fmenu = 1;
