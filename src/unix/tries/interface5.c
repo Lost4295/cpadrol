@@ -42,7 +42,10 @@ int setWindowColor(SDL_Renderer *renderer, SDL_Color color)
 
 void printText(TTF_Font *font, SDL_Renderer *renderer, SDL_Color color, char *texte)
 {
+    if (strlen(texte)>0){
+        
     SDL_Surface *text;
+    
 
     SDL_RenderClear(renderer);
     text = TTF_RenderText_Solid(font, texte, color);
@@ -56,6 +59,9 @@ void printText(TTF_Font *font, SDL_Renderer *renderer, SDL_Color color, char *te
     SDL_RenderCopy(renderer, text_texture, NULL, &dest);
     SDL_RenderPresent(renderer);
     printf("Rendered : %s\n", texte);
+    } else {
+        printf("Warning : len of text is less than one\n");
+    }
 }
 
 void append(char *s, char c)
@@ -67,7 +73,7 @@ void append(char *s, char c)
 void pop(char *s)
 {
     int len = strlen(s);
-    if (len >1){
+    if (len > 0){
         s[len-1] = '\0';
     } else {
         printf("Cannot suppress : empty !");
@@ -127,8 +133,7 @@ int main(int argc, char *argv[])
             if (renderText)
             {
                 // Text is not empty
-                printf("input :%s\n", inputText);
-                if (inputText != "")
+                if (strlen(inputText) > 0 )
                 {
                     // Render new text
                     printText(font, renderer, white_color, inputText);
