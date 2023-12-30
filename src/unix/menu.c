@@ -23,6 +23,7 @@ char *play = "Play";
 char *multiplayer = "Watch a replay";
 char *settings = "Settings";
 char *quit = "Quit";
+char *rtm = "Return to Menu";
 char *mscolor = "Modify Screen Color";
 char *mpseudo = "Modify Pseudo";
 
@@ -181,7 +182,7 @@ void print_settings_opts(TTF_Font *font, SDL_Renderer *renderer, int num)
     SDL_RenderPresent(renderer);
 }
 
-int main(int argc, char *argv[])
+int main()
 {
     menu[0] = &play;
     menu[1] = &multiplayer;
@@ -190,7 +191,7 @@ int main(int argc, char *argv[])
 
     settingsmenu[0] = &mscolor;
     settingsmenu[1] = &mpseudo;
-    settingsmenu[2] = &quit;
+    settingsmenu[2] = &rtm;
 
     /* On fait toutes nos initialisations ici */
     int statut = EXIT_FAILURE;
@@ -219,8 +220,8 @@ int main(int argc, char *argv[])
     printText(tfont, renderer, black_color, "Puissance 4", &title);
     printText(lfont, renderer, black_color, "Realise par Mathis Vareilles, Ylan Turin--Kondi et Zacharie Roger", &authors);
     SDL_RenderPresent(renderer);
-    SDL_Delay(1000);
-
+    SDL_Delay(3000);
+    print_menu_opts(font, renderer,num);
     SDL_Event event;
     SDL_bool quit = SDL_FALSE;
     while (!quit)
