@@ -144,6 +144,10 @@ int main()
             }
         }
     }
+    if (!end){
+        printf("The game is not finished.\n");
+        printf("There is no winner : the file you have given is not a valid replay.\n");
+    }
     fclose(file);
     return 0;
 }

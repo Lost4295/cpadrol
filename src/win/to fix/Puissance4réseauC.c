@@ -36,6 +36,7 @@ void checknull();
 int tryconnect(int erreur);
 int instanciate();
 
+FILE *fp;
 int tab[LIGNES][COLONNES];
 int jactuel = 1;
 int *pjactuel = &jactuel;
@@ -43,7 +44,8 @@ char buffer;
 int ended = 0;
 int animation = 0;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     if (argc >= 2)
     {
         animation = 1;
@@ -53,59 +55,78 @@ int main(int argc, char *argv[]) {
     tryconnect(erreur);
 }
 
-int instanciate() {
+int instanciate()
+{
     WSADATA WSAData;
-    int erreur = WSAStartup(MAKEWORD(2,2), &WSAData);
+    int erreur = WSAStartup(MAKEWORD(2, 2), &WSAData);
     return erreur;
-    }
+}
 
-int tryconnect(int erreur) {
-    if(!erreur) {
+int tryconnect(int erreur)
+{
+    if (!erreur)
+    {
         SOCKET sock;
         SOCKADDR_IN sin;
         sock = socket(AF_INET, SOCK_STREAM, 0);
         /* Si la socket est valide */
-        if(sock != INVALID_SOCKET) {
+        if (sock != INVALID_SOCKET)
+        {
             printf("La socket %d est maintenant ouverte en mode TCP/IP\n", sock);
             /* Configuration */
-            sin.sin_addr.s_addr    = inet_addr("127.0.0.1");  /* Adresse IP automatique */
-            sin.sin_family         = AF_INET;                 /* Protocole familial (IP) */
-            sin.sin_port           = htons(PORT);             /* Listage du port */
-            if (connect(sock, (SOCKADDR*)&sin, sizeof(sin)) != SOCKET_ERROR) {
+            sin.sin_addr.s_addr = inet_addr("127.0.0.1"); /* Adresse IP automatique */
+            sin.sin_family = AF_INET;                     /* Protocole familial (IP) */
+            sin.sin_port = htons(PORT);                   /* Listage du port */
+            if (connect(sock, (SOCKADDR *)&sin, sizeof(sin)) != SOCKET_ERROR)
+            {
                 printf("Connection a %s sur le port %d\n", inet_ntoa(sin.sin_addr), htons(sin.sin_port));
                 sleep(1);
                 onConnectdone();
                 createtab();
                 system("cls");
                 printtab();
-                while(ended!=1){
-                    if (*pjactuel == 1) {
+                while (ended != 1)
+                {
+                    if (*pjactuel == 1)
+                    {
                         printtab();
                         printf("En attente du joueur %d...\n", *pjactuel);
-                        int waitforrecieve= recv(sock, &buffer, sizeof(buffer) , 0);
-                        if (waitforrecieve != SOCKET_ERROR) {
-                            int rnum = buffer-'0';
+                        int waitforrecieve = recv(sock, &buffer, sizeof(buffer), 0);
+                        if (waitforrecieve != SOCKET_ERROR)
+                        {
+                            int rnum = buffer - '0';
                             system("cls");
                             verifyadd(rnum, &jactuel);
+                            verifywin(rnum, pjactuel);
                             *pjactuel = 2;
                         }
-                    } else {
+                    }
+                    else
+                    {
                         int num = turns();
                         char convert = num + '0';
-                        sender:
-                        if(send(sock, &convert, sizeof(convert), 0) != SOCKET_ERROR){
+                    sender:
+                        if (send(sock, &convert, sizeof(convert), 0) != SOCKET_ERROR)
+                        {
+                            verifywin(num, pjactuel);
+                            printf("Envoi en cours...\n");
+                            sleep(2);
                             *pjactuel = 1;
-                        } else{
+                        }
+                        else
+                        {
                             printf("Erreur de transmission\n");
                             goto sender;
                         }
                     }
                 }
-            } else {
+            }
+            else
+            {
                 printf("La connexion au serveur a echoue.\n");
                 printf("Fermeture de la socket...\n");
                 closesocket(sock);
-                int erreur= instanciate();
+                int erreur = instanciate();
                 tryconnect(erreur);
             }
         }
@@ -114,7 +135,9 @@ int tryconnect(int erreur) {
         closesocket(sock);
         printf("Fermeture du client terminee ! Appuyez sur entree pour continuer.\n");
         WSACleanup();
-    } else {
+    }
+    else
+    {
         printf("Erreur de connexion.\n");
     }
     getchar();
@@ -144,17 +167,19 @@ void intro()
     printf("\n");
     system("cls");
 }
-void onConnectdone(){
+void onConnectdone()
+{
     printf("Lancons le jeu !\n");
     sleep(1);
     printf("\n");
     printf("\n");
     printf("Creation du tableau de jeu.");
+    fp = fopen("replays/replayC.txt", "w");
     sleep(1);
 }
 void createtab()
 {
-    
+
     for (int i = 0; i < LIGNES; i++)
     {
         for (int j = 0; j < COLONNES; j++)
@@ -178,20 +203,26 @@ void printtab()
         printf("%s| %s", BLEU, END);
         for (int j = 0; j < COLONNES; j++)
         {
-        
+
             if (tab[i][j] == 1)
             {
-                printf("| %s%c%s ", ROUGE,48, END);
+                printf("| %s%c%s ", ROUGE, 48, END);
             }
             else if (tab[i][j] == 2)
             {
-                printf("| %s%c%s ", JAUNE,48, END);
-            } else if (tab[i][j]==3){
-                printf("| %s%c%s ", ROUGEW,48, END);
-            } else if (tab[i][j]==4){
-                printf("| %s%c%s ", JAUNEW,48, END);
-            } else {
-                printf("| %s%c%s ", NOIR,32, END);
+                printf("| %s%c%s ", JAUNE, 48, END);
+            }
+            else if (tab[i][j] == 3)
+            {
+                printf("| %s%c%s ", ROUGEW, 48, END);
+            }
+            else if (tab[i][j] == 4)
+            {
+                printf("| %s%c%s ", JAUNEW, 48, END);
+            }
+            else
+            {
+                printf("| %s%c%s ", NOIR, 32, END);
             }
         }
         printf("|\t%s|%s\n", BLEU, END);
@@ -201,31 +232,32 @@ void printtab()
 int turns()
 {
     int colonne;
-    do {
-    printtab();
-    printf("Joueur %d, a vous de jouer !\n", *pjactuel);
-    printf("Dans quelle colonne voulez-vous jouer ? (Entrez 0 pour quitter la partie.)\n");
-    scanf("%d", &colonne);
-    printf("\n");
-    system("cls");
-    if (colonne < 1 || colonne > 7)
+    do
     {
-        printf("%s==========Erreur !==========\n", ROUGE);
-        printf("==>Vous devez entrer un numero de colonne entre 1 et 7.\n");
-        printf("==>Veuillez reessayer.\n");
-        printf("============================%s\n", END);
+        printtab();
+        printf("Joueur %d, a vous de jouer !\n", *pjactuel);
+        printf("Dans quelle colonne voulez-vous jouer ? (Entrez 0 pour quitter la partie.)\n");
+        scanf("%d", &colonne);
         printf("\n");
-        continue;
-    }
+        system("cls");
+        if (colonne < 1 || colonne > 7)
+        {
+            printf("%s==========Erreur !==========\n", ROUGE);
+            printf("==>Vous devez entrer un numero de colonne entre 1 et 7.\n");
+            printf("==>Veuillez reessayer.\n");
+            printf("============================%s\n", END);
+            printf("\n");
+            continue;
+        }
         if (tab[0][colonne - 1] != VIDE)
-            {
-                printf("%s==========Erreur !==========\n", ROUGE);
-                printf("==>Cette colonne est pleine.\n");
-                printf("==>Veuillez reessayer.\n");
-                printf("============================%s\n", END);
-                printf("\n");
-                continue;
-            }
+        {
+            printf("%s==========Erreur !==========\n", ROUGE);
+            printf("==>Cette colonne est pleine.\n");
+            printf("==>Veuillez reessayer.\n");
+            printf("============================%s\n", END);
+            printf("\n");
+            continue;
+        }
     } while (colonne <= 0 || colonne > 7);
     verifyadd(colonne, &jactuel);
     return colonne;
@@ -253,7 +285,7 @@ void verifyadd(int colonne, int *joueur)
                 break;
             }
         }
-        verifywin(colonne, joueur);
+        fprintf(fp, "%d %d\n", jactuel, colonne);
     }
 }
 void verifywin(int colonne, int *joueur)
@@ -272,7 +304,7 @@ void verifywin(int colonne, int *joueur)
     }
     else
     {
-    printtab();
+        printtab();
     }
 }
 void checknull()
@@ -415,7 +447,7 @@ void endgame(int *wjoueur, int result, int mode)
     }
     sleep(2);
     printf("A bientot !\n");
-
+    fclose(fp);
     exit(0);
 }
 void clrscr()
