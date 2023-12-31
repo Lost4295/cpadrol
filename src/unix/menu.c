@@ -5,6 +5,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <dirent.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <time.h>
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
@@ -15,14 +20,16 @@ SDL_Rect rect = {100, 100, 100, 100}, dst = {0, 0, 0, 0};
 SDL_Rect title = {350, 15, 100, 100};
 SDL_Rect authors = {0, 400, 100, 100};
 SDL_Color black_color = {0, 0, 0, 255};
+SDL_Color red_color = {255, 0, 0, 255};
 SDL_Color yellow_color = {255, 255, 0, 255};
 SDL_Color white_color = {255, 255, 255, 255};
 char inputText[50];
 
-int num = 0, nus = 0, nup = 0, nuc = 0;
+int num = 0, nus = 0, nup = 0, nuc = 0, nur = 0;
 int fsolo = 0, fserver = 0, fclient = 0;
-int fmplay = 0, freplay = 0, fsettings = 0, fmenu = 0, fplay = 0, fconfig = 1;
+int fmplay = 0, fmreplay = 0, fsettings = 0, fmenu = 0, fplay = 0, fconfig = 1, freplay = 0, fauto = -1;
 int ended = 0;
+int maxfiles = 0;
 char **menu[4];
 char **settingsmenu[3];
 char **playmenu[4];
@@ -47,6 +54,8 @@ char *mpseudo = "Modify Pseudo";
 #define END "\033[00m"
 #define ROUGEW "\033[31;42;01;51m"
 #define JAUNEW "\033[33;42;01m"
+#define WWIDTH 640
+#define WHEIGHT 480
 int tableau[6][7];
 int j = 1;
 int *pj = &j;
@@ -513,6 +522,23 @@ void print_turn()
         printText(lfont, renderer, white_color, turn, &re);
     }
 }
+void turnsreplay(char *p)
+{
+    int colonne = p[0] - '0';
+    printf("\n");
+    InsertCoin(renderer, colonne - 1);
+}
+void createtab()
+{
+
+    for (int i = 0; i < 6; i++)
+    {
+        for (int j = 0; j < 7; j++)
+        {
+            tableau[i][j] = 0;
+        }
+    }
+}
 
 void printtab()
 {
@@ -590,11 +616,11 @@ int loadTableau(SDL_Renderer *renderer)
     {
         for (int j = 0; j < 7; j++)
         {
-            if (tableau[i][j] == 1)
+            if (tableau[i][j] == 1 || tableau[i][j] == 3)
             {
                 SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
             }
-            else if (tableau[i][j] == 2)
+            else if (tableau[i][j] == 2 || tableau[i][j] == 4)
             {
                 SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
             }
@@ -750,6 +776,311 @@ void endgame(int *wjoueur, int result)
     int *pended = &ended;
     *pended = 1;
 }
+
+void printFileProperties(struct stat stats)
+{
+    struct tm dt;
+    // File permissions
+    printf("\nFile access: ");
+    if (stats.st_mode & R_OK)
+        printf("read ");
+    if (stats.st_mode & W_OK)
+        printf("write ");
+    if (stats.st_mode & X_OK)
+        printf("execute");
+
+    // File size
+    printf("\nFile size: %d", stats.st_size);
+
+    // Get file creation time in seconds and
+    // convert seconds to date and time format
+    dt = *(gmtime(&stats.st_ctime));
+    printf("\nCreated on: %d-%d-%d %d:%d:%d", dt.tm_mday, dt.tm_mon, dt.tm_year + 1900,
+           dt.tm_hour, dt.tm_min, dt.tm_sec);
+
+    // File modification time
+    dt = *(gmtime(&stats.st_mtime));
+    printf("\nModified on: %d-%d-%d %d:%d:%d", dt.tm_mday, dt.tm_mon, dt.tm_year + 1900,
+           dt.tm_hour, dt.tm_min, dt.tm_sec);
+}
+
+int handledirectory()
+{
+    struct stat stats;
+    DIR *d;
+    struct dirent *dir;
+    int cpt = 1, i = 0;
+    d = opendir("replays");
+    if (d)
+    {
+        while ((dir = readdir(d)) != NULL)
+        {
+            if (dir->d_type == DT_REG)
+            {
+                cpt++;
+            }
+        }
+        closedir(d);
+    }
+    printf("cpt= %d\n", cpt);
+    chdir("replays");
+    SDL_Rect rects[cpt];
+    for (int j = 0; j < cpt; j++)
+    {
+        if (cpt <= 10)
+        {
+            rects[j].x = WWIDTH / 2;
+            rects[j].y = WHEIGHT / cpt * (j + 1);
+            rects[j].h = 100;
+            rects[j].w = 100;
+        }
+        else
+        {
+            if (j < 10)
+            {
+                rects[j].x = WWIDTH / 4 - 50;
+                rects[j].y = WHEIGHT / cpt * (j + 1) + 20;
+                rects[j].h = 100;
+                rects[j].w = 100;
+            }
+            else
+            {
+                rects[j].x = WWIDTH / 4 * 3 - 50;
+                rects[j].y = WHEIGHT / (cpt % 10) * (j % 10 + 1);
+                rects[j].h = 100;
+                rects[j].w = 100;
+            }
+        }
+    }
+    d = opendir(".");
+    if (d)
+    {
+        while ((dir = readdir(d)) != NULL)
+        {
+            if (dir->d_type == DT_REG)
+            {
+                printText(font, renderer, white_color, dir->d_name, &rects[i]);
+                i++;
+            }
+        }
+        closedir(d);
+    }
+    chdir("../");
+    return cpt;
+}
+
+void print_replay_title()
+{
+    SDL_Rect rects;
+    rects.x = 0;
+    rects.y = 20;
+    rects.w = 100;
+    rects.h = 100;
+    printText(font, renderer, white_color, "Choisissez un replay à jouer.", &rects);
+    SDL_RenderPresent(renderer);
+}
+
+void print_files(TTF_Font *font, SDL_Renderer *renderer, int num)
+{
+    SDL_RenderClear(renderer);
+    SDL_Surface *image = IMG_Load("image.jpeg");
+    SDL_Texture *img_texture = NULL;
+    if (!image)
+    {
+        printf("Erreur de chargement de l'image : %s", SDL_GetError());
+    }
+    img_texture = SDL_CreateTextureFromSurface(renderer, image);
+    SDL_RenderCopy(renderer, img_texture, NULL, NULL);
+    print_replay_title();
+
+    struct stat stats;
+    DIR *d;
+    struct dirent *dir;
+    SDL_Rect rects[maxfiles];
+    int i = 0;
+    for (int j = 0; j < maxfiles; j++)
+    {
+        if (maxfiles <= 10)
+        {
+            rects[j].x = WWIDTH / 2;
+            rects[j].y = WHEIGHT / maxfiles * (j + 1);
+            rects[j].h = 100;
+            rects[j].w = 100;
+        }
+        else
+        {
+            if (j < 10)
+            {
+                rects[j].x = WWIDTH / 4 - 50;
+                rects[j].y = WHEIGHT / maxfiles * (j + 1) + 20;
+                rects[j].h = 100;
+                rects[j].w = 100;
+            }
+            else
+            {
+                rects[j].x = WWIDTH / 4 * 3 - 50;
+                rects[j].y = WHEIGHT / (maxfiles % 10) * (j % 10 + 1);
+                rects[j].h = 100;
+                rects[j].w = 100;
+            }
+        }
+    }
+    d = opendir("replays");
+    if (d)
+    {
+        while ((dir = readdir(d)) != NULL)
+        {
+            if (dir->d_type == DT_REG)
+            {
+                if (i == num)
+                {
+                    printText(font, renderer, yellow_color, dir->d_name, &rects[i]);
+                    printf(" actual : %d = %s\n", i, dir->d_name);
+                }
+                else
+                {
+                    printText(font, renderer, white_color, dir->d_name, &rects[i]);
+                }
+                printf("%d = %s\n", i, dir->d_name);
+                i++;
+            }
+        }
+        closedir(d);
+    }
+    SDL_RenderPresent(renderer);
+}
+void getfile(int num)
+{
+    struct stat stats;
+    DIR *d;
+    FILE *f;
+    struct dirent *dir;
+    int i = 0;
+    d = opendir("replays");
+    if (d)
+    {
+        while ((dir = readdir(d)) != NULL)
+        {
+            if (dir->d_type == DT_REG)
+            {
+                if (i == num)
+                {
+                    chdir("replays");
+                    f = fopen(dir->d_name, "r");
+                    if (f == NULL)
+                    {
+                        printf("Failed to open the file.\n");
+                        return 1;
+                    }
+                    printf("File opened successfully.\n");
+                    char line[250];
+                    int lcount = 1;
+                    while (fgets(line, sizeof(line), f) != NULL)
+                    {
+                        if (ended)
+                        {
+                            break;
+                        }
+                        if (lcount == 1)
+                        {
+                            SDL_Rect re;
+                            re.x = 400;
+                            re.y = 50;
+                            SDL_Rect re2;
+                            re2.x = 400;
+                            re2.y = 100;
+                            SDL_Rect re3;
+                            re3.x = 400;
+                            re3.y = 150;
+                            char d[] = "-";
+                            char *p = strtok(line, d);
+                            printf("Player 1: %s\n", p);
+                            printText(font, renderer, red_color, p, &re);
+                            printText(font, renderer, white_color, "vs", &re2);
+                            p = strtok(NULL, d);
+                            printf("Player 2: %s\n", p);
+                            printText(font, renderer, yellow_color, p, &re3);
+                            lcount++;
+                            SDL_RenderPresent(renderer);
+                            SDL_Delay(3000);
+                            continue;
+                        }
+                        else
+                        {
+                            printf("---------------------------------\nLigne %d : %s\n\n", lcount, line);
+                            lcount++;
+                            char d[] = " ";
+                            char *p = strtok(line, d);
+                            bool jorc = true;
+                            while (p != NULL)
+                            {
+                                jorc = !jorc;
+                                if (jorc)
+                                {
+                                    printf("fait le Coup %s. \n", p);
+                                    turnsreplay(p);
+                                    // if (adv)
+                                    //{
+                                    //     printf("Press enter to continue.\n");
+                                    //     getchar();
+                                    // } else {
+                                    SDL_Delay(500);
+                                    //}
+                                }
+                                else
+                                {
+                                    printtab();
+                                    loadTableau(renderer);
+                                    printf("Joueur %s ", p);
+                                }
+                                p = strtok(NULL, d);
+                            }
+                        }
+                    }
+                    if (!ended)
+                    {
+                        char *wj = "The game is not finished.";
+                        char *wj2 = "There is no winner : the file you have given is not a valid replay.";
+                        printText(lfont, renderer, white_color, wj, &authors);
+                        SDL_Rect authors2;
+                        authors2.x = authors.x;
+                        authors2.y = authors.y + 50;
+                        authors2.w = 0;
+                        authors2.h = 0;
+                        printText(lfont, renderer, white_color, wj2, &authors2);
+                        printf("%s\n", wj);
+                        printf("%s\n", wj2);
+                        SDL_RenderPresent(renderer);
+                    }
+                    fclose(f);
+                    chdir("../");
+                }
+                i++;
+            }
+        }
+        closedir(d);
+    }
+}
+
+void print_ask_auto()
+{
+    SDL_RenderClear(renderer);
+    SDL_Surface *image = IMG_Load("image.jpeg");
+    SDL_Texture *img_texture = NULL;
+    if (!image)
+    {
+        printf("Erreur de chargement de l'image : %s", SDL_GetError());
+    }
+    img_texture = SDL_CreateTextureFromSurface(renderer, image);
+    SDL_RenderCopy(renderer, img_texture, NULL, NULL);
+    SDL_Rect rects;
+    rects.x = 0;
+    rects.y = 20;
+    rects.w = 100;
+    rects.h = 100;
+    printText(font, renderer, black_color, "Voulez vous que le replay soit automatique ? ", &rects);
+}
+
 int main()
 {
     menu[0] = &play;
@@ -767,7 +1098,7 @@ int main()
     playmenu[3] = &retour;
     /* On fait toutes nos initialisations ici */
     int statut = EXIT_FAILURE;
-    if (init(&window, &renderer, 640, 480) < 0)
+    if (init(&window, &renderer, WWIDTH, WHEIGHT) < 0)
     {
         goto Quit;
     }
@@ -875,6 +1206,11 @@ int main()
                         (nus == 0) ? nus = 2 : nus--;
                         print_settings_opts(font, renderer, nus);
                     }
+                    if (fmreplay)
+                    {
+                        (nur == 0) ? nur = maxfiles - 2 : nur--;
+                        print_files(font, renderer, nur);
+                    }
                     break;
                 case SDL_SCANCODE_DOWN:
                     printf("scancode down\n");
@@ -893,6 +1229,11 @@ int main()
                         (nus == 2) ? nus = 0 : nus++;
                         print_settings_opts(font, renderer, nus);
                     }
+                    if (fmreplay)
+                    {
+                        (nur == maxfiles - 2) ? nur = 0 : nur++;
+                        print_files(font, renderer, nur);
+                    }
                     break;
                 case SDL_SCANCODE_LEFT:
                     printf("scancode left\n");
@@ -904,7 +1245,6 @@ int main()
                         SDL_Delay(50);
                         makeChooseCircle(renderer, nuc);
                     }
-
                     break;
                 case SDL_SCANCODE_RIGHT:
                     printf("scancode right\n");
@@ -947,6 +1287,12 @@ int main()
                         fsettings = 0;
                         print_menu_opts(font, renderer, num);
                     }
+                    else if (fmreplay)
+                    {
+                        fmenu = 1;
+                        fmreplay = 0;
+                        print_menu_opts(font, renderer, num);
+                    }
                     break;
                 case SDL_SCANCODE_RETURN:
                     if (fconfig)
@@ -972,7 +1318,12 @@ int main()
                             print_play_opts(font, renderer, nup);
                             break;
                         case 1:
-                            freplay = 1;
+                            fmreplay = 1;
+                            fmenu = 0;
+                            SDL_RenderClear(renderer);
+                            print_replay_title();
+                            maxfiles = handledirectory();
+                            SDL_RenderPresent(renderer);
                             break;
                         case 2:
                             fmenu = 0;
@@ -1063,6 +1414,13 @@ int main()
                         fmenu = 1;
                         nuc = 0;
                         print_menu_opts(font, renderer, num);
+                    }
+                    else if (fmreplay)
+                    {
+                        getfile(nur);
+                        createtab();
+                        fmreplay = 0;
+                        fmenu = 1;
                     }
                     break;
                 default:
