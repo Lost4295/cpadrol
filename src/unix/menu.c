@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <errno.h>
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
@@ -26,7 +27,7 @@ SDL_Color white_color = {255, 255, 255, 255};
 char inputText[50];
 
 int num = 0, nus = 0, nup = 0, nuc = 0, nur = 0;
-int fsolo = 0, fserver = 0, fclient = 0;
+int flocal = 0, fserver = 0, fclient = 0;
 int fmplay = 0, fmreplay = 0, fsettings = 0, fmenu = 0, fplay = 0, fconfig = 1, freplay = 0, fauto = -1;
 int ended = 0;
 int maxfiles = 0;
@@ -39,7 +40,7 @@ char *settings = "Settings";
 char *quit = "Quit";
 char *host = "Héberger la connexion";
 char *client = "Se connecter à un serveur";
-char *solo = "Jouer à deux en solo";
+char *local = "Jouer à deux en local";
 char *retour = "Retour";
 char *rtm = "Return to Menu";
 char *mscolor = "Modify Screen Color";
@@ -54,8 +55,7 @@ char *mpseudo = "Modify Pseudo";
 #define END "\033[00m"
 #define ROUGEW "\033[31;42;01;51m"
 #define JAUNEW "\033[33;42;01m"
-#define WWIDTH 640
-#define WHEIGHT 480
+int width = 1060, height = 880;
 int tableau[6][7];
 int j = 1;
 int *pj = &j;
@@ -78,9 +78,10 @@ void pop(char *s)
         printf("Cannot suppress : empty !");
     }
 }
+
 int init(SDL_Window **window, SDL_Renderer **renderer, int w, int h)
 {
-    if (0 != SDL_Init(SDL_INIT_VIDEO))
+    if (0 != SDL_Init(SDL_INIT_EVERYTHING))
     {
         fprintf(stderr, "Erreur SDL_Init : %s", SDL_GetError());
         return -1;
@@ -100,6 +101,11 @@ int init(SDL_Window **window, SDL_Renderer **renderer, int w, int h)
         fprintf(stderr, "Erreur IMG_Init : %s", IMG_GetError());
         return -1;
     }
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Bienvenue", "Bienvenue dans le jeu Puissance 4 !", *window);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Bienvenue", "Recherche des fichiers de configuration en cours...", *window);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bienvenue", "Fichiers de configuration non trouvés !", *window);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Bienvenue", "Pour commencer, veuillez entrer votre pseudo.", *window);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Bienvenue", "Attention !", *window);
     return 0;
 }
 
@@ -465,7 +471,6 @@ int createTableau(SDL_Renderer *renderer)
     SDL_RenderDrawLine(renderer, 250, 0, 250, 50 * 6);
     SDL_RenderDrawLine(renderer, 300, 0, 300, 50 * 6);
     SDL_RenderDrawLine(renderer, 350, 0, 350, 50 * 6);
-    SDL_RenderPresent(renderer);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
     for (int i = 0; i < 6; i++)
     {
@@ -487,6 +492,11 @@ int InsertCoin(SDL_Renderer *renderer, int num)
     else if (*pj == 2)
     {
         SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+    }
+    if (tableau[0][num] != 0)
+    {
+        printText(font, renderer, red_color, "Colonne pleine !", &rect);
+        return;
     }
     int i;
     for (i = 5; i >= 0; i--)
@@ -522,12 +532,14 @@ void print_turn()
         printText(lfont, renderer, white_color, turn, &re);
     }
 }
+
 void turnsreplay(char *p)
 {
     int colonne = p[0] - '0';
     printf("\n");
     InsertCoin(renderer, colonne - 1);
 }
+
 void createtab()
 {
 
@@ -643,6 +655,7 @@ void verifywin(int *joueur)
     checkdiag(joueur);
     checknull();
 }
+
 void checknull()
 {
     if (tableau[0][0] && tableau[0][1] && tableau[0][2] && tableau[0][3] && tableau[0][4] && tableau[0][5] && tableau[0][6])
@@ -650,6 +663,7 @@ void checknull()
         return endgame(NULL, 0);
     }
 }
+
 void checkligne(int *joueur)
 {
     for (int i = 0; i < 6; i++)
@@ -677,6 +691,7 @@ void checkligne(int *joueur)
         }
     }
 }
+
 void checkcol(int *joueur)
 {
     for (int i = 0; i < 6; i++)
@@ -704,6 +719,7 @@ void checkcol(int *joueur)
         }
     }
 }
+
 void checkdiag(int *joueur)
 {
     for (int i = 0; i < 6; i++)
@@ -829,8 +845,8 @@ int handledirectory()
     {
         if (cpt <= 10)
         {
-            rects[j].x = WWIDTH / 2;
-            rects[j].y = WHEIGHT / cpt * (j + 1);
+            rects[j].x = width / 2;
+            rects[j].y = height / cpt * (j + 1);
             rects[j].h = 100;
             rects[j].w = 100;
         }
@@ -838,15 +854,15 @@ int handledirectory()
         {
             if (j < 10)
             {
-                rects[j].x = WWIDTH / 4 - 50;
-                rects[j].y = WHEIGHT / cpt * (j + 1) + 20;
+                rects[j].x = width / 4 - 50;
+                rects[j].y = height / cpt * (j + 1) + 20;
                 rects[j].h = 100;
                 rects[j].w = 100;
             }
             else
             {
-                rects[j].x = WWIDTH / 4 * 3 - 50;
-                rects[j].y = WHEIGHT / (cpt % 10) * (j % 10 + 1);
+                rects[j].x = width / 4 * 3 - 50;
+                rects[j].y = height / (cpt % 10) * (j % 10 + 1);
                 rects[j].h = 100;
                 rects[j].w = 100;
             }
@@ -902,8 +918,8 @@ void print_files(TTF_Font *font, SDL_Renderer *renderer, int num)
     {
         if (maxfiles <= 10)
         {
-            rects[j].x = WWIDTH / 2;
-            rects[j].y = WHEIGHT / maxfiles * (j + 1);
+            rects[j].x = width / 2;
+            rects[j].y = height / maxfiles * (j + 1);
             rects[j].h = 100;
             rects[j].w = 100;
         }
@@ -911,15 +927,15 @@ void print_files(TTF_Font *font, SDL_Renderer *renderer, int num)
         {
             if (j < 10)
             {
-                rects[j].x = WWIDTH / 4 - 50;
-                rects[j].y = WHEIGHT / maxfiles * (j + 1) + 20;
+                rects[j].x = width / 4 - 50;
+                rects[j].y = height / maxfiles * (j + 1) + 20;
                 rects[j].h = 100;
                 rects[j].w = 100;
             }
             else
             {
-                rects[j].x = WWIDTH / 4 * 3 - 50;
-                rects[j].y = WHEIGHT / (maxfiles % 10) * (j % 10 + 1);
+                rects[j].x = width / 4 * 3 - 50;
+                rects[j].y = height / (maxfiles % 10) * (j % 10 + 1);
                 rects[j].h = 100;
                 rects[j].w = 100;
             }
@@ -949,6 +965,7 @@ void print_files(TTF_Font *font, SDL_Renderer *renderer, int num)
     }
     SDL_RenderPresent(renderer);
 }
+
 void getfile(int num)
 {
     struct stat stats;
@@ -1094,11 +1111,11 @@ int main()
 
     playmenu[0] = &host;
     playmenu[1] = &client;
-    playmenu[2] = &solo;
+    playmenu[2] = &local;
     playmenu[3] = &retour;
     /* On fait toutes nos initialisations ici */
     int statut = EXIT_FAILURE;
-    if (init(&window, &renderer, WWIDTH, WHEIGHT) < 0)
+    if (init(&window, &renderer, width, height) < 0)
     {
         goto Quit;
     }
@@ -1123,24 +1140,43 @@ int main()
     printText(tfont, renderer, black_color, "Puissance 4", &title);
     printText(lfont, renderer, black_color, "Realise par Mathis Vareilles, Ylan Turin--Kondi et Zacharie Roger", &authors);
     SDL_RenderPresent(renderer);
-    SDL_Delay(3000);
-    if (file_exists("config.txt"))
+    SDL_Delay(2000);
+    DIR *test = opendir("replays");
+    if (file_exists("config.txt") && test)
     {
         fconfig = 0;
         fmenu = 1;
-    }
-    else
-    {
-        fconfig = 1;
-        fmenu = 0;
-    }
-    if (fmenu)
-    {
+        closedir(test);
         print_menu_opts(font, renderer, num);
         print_hello(font, renderer);
     }
     else
     {
+        fconfig = 1;
+        fmenu = 0;
+        int dir = mkdir("replays", 777);
+        if (!dir)
+        {
+            printf("Directory created.\n");
+        }
+        else
+        {
+            printf("Unable to create directory. Maybe it is already there ?\n");
+            DIR *dir = opendir("replays");
+            if (dir)
+            {
+                printf("Directory already exists.\n");
+                closedir(dir);
+            }
+            else if (ENOENT == errno)
+            {
+                printf("Directory doesn't exist.\n");
+            }
+            else
+            {
+                printf("Error while checking if directory exists.\n");
+            }
+        }
         SDL_StartTextInput();
         setWindowColor(renderer, black_color);
         print_pseudo_maker(font, renderer, " ");
@@ -1211,6 +1247,15 @@ int main()
                         (nur == 0) ? nur = maxfiles - 2 : nur--;
                         print_files(font, renderer, nur);
                     }
+                    if (ended)
+                    {
+                        ended = 0;
+                        fplay = 0;
+                        fmenu = 1;
+                        flocal=0;
+                        nuc = 0;
+                        print_menu_opts(font, renderer, num);
+                    }
                     break;
                 case SDL_SCANCODE_DOWN:
                     printf("scancode down\n");
@@ -1229,15 +1274,32 @@ int main()
                         (nus == 2) ? nus = 0 : nus++;
                         print_settings_opts(font, renderer, nus);
                     }
+                    if (ended)
+                    {
+                        ended = 0;
+                        fplay = 0;
+                        fmenu = 1;
+                        flocal=0;
+                        nuc = 0;
+                        print_menu_opts(font, renderer, num);
+                    }
                     if (fmreplay)
                     {
                         (nur == maxfiles - 2) ? nur = 0 : nur++;
                         print_files(font, renderer, nur);
-                    }
+                    } 
                     break;
                 case SDL_SCANCODE_LEFT:
                     printf("scancode left\n");
-                    if (fplay && fsolo)
+                    if (ended)
+                    {
+                        ended = 0;
+                        fplay = 0;
+                        fmenu = 1;
+                        flocal=0;
+                        nuc = 0;
+                        print_menu_opts(font, renderer, num);
+                    } else if (fplay && flocal)
                     {
                         (nuc == 0) ? nuc = 6 : nuc--;
                         printf("scancode left : nuc = %d\n", nuc);
@@ -1248,7 +1310,15 @@ int main()
                     break;
                 case SDL_SCANCODE_RIGHT:
                     printf("scancode right\n");
-                    if (fplay && fsolo)
+                    if (ended)
+                    {
+                        ended = 0;
+                        fplay = 0;
+                        fmenu = 1;
+                        flocal=0;
+                        nuc = 0;
+                        print_menu_opts(font, renderer, num);
+                    }else if (fplay && flocal)
                     {
                         (nuc == 6) ? nuc = 0 : nuc++;
                         printf("scancode right : nuc = %d\n", nuc);
@@ -1256,7 +1326,6 @@ int main()
                         SDL_Delay(50);
                         makeChooseCircle(renderer, nuc);
                     }
-
                     break;
                 case SDL_SCANCODE_S: // à enlever
                     FILE *file = fopen("config.txt", "r");
@@ -1293,7 +1362,91 @@ int main()
                         fmreplay = 0;
                         print_menu_opts(font, renderer, num);
                     }
+                    else if (fmplay)
+                    {
+                        fmenu = 1;
+                        fmplay = 0;
+                        print_menu_opts(font, renderer, num);
+                    }
+                    else if (fplay)
+                    {
+                        fmenu = 1;
+                        fplay = 0;
+                        print_menu_opts(font, renderer, num);
+                    }
+                    else if (flocal)
+                    {
+                        fplay = 1;
+                        flocal = 0;
+                        print_play_opts(font, renderer, nup);
+                    }
+                    else if (fconfig)
+                    {
+                        quit = SDL_TRUE;
+                    }
                     break;
+                                    case SDL_SCANCODE_F: // à enlever
+                    printf("Flags :");
+                    if (fmenu)
+                    {
+                        printf(" fmenu");
+                    }
+                    if (fsettings)
+                    {
+                        printf(" fsettings");
+                    }
+                    if (fmreplay)
+                    {
+                        printf(" fmreplay");
+                    }
+                    if (fmplay)
+                    {
+                        printf(" fmplay");
+                    }
+                    if (fplay)
+                    {
+                        printf(" fplay");
+                    }
+                    if (flocal)
+                    {
+                        printf(" flocal");
+                    }
+                    if (fconfig)
+                    {
+                        printf(" fconfig");
+                    }
+                    if (fserver)
+                    {
+                        printf(" fserver");
+                    }
+                    if (fclient)
+                    {
+                        printf(" fclient");
+                    }
+                    if (freplay)
+                    {
+                        printf(" freplay");
+                    }
+                    if(fauto){
+                        printf(" fauto");
+                    }
+                    if (ended){
+                        printf(" ended");
+                    }
+                    printf("\n");
+                    printf("Variables :");
+                    printf(" num = %d", num);
+                    printf(" nus = %d", nus);
+                    printf(" nup = %d", nup);
+                    printf(" nur = %d", nur);
+                    printf(" nuc = %d", nuc);
+                    printf(" pj = %d", j);
+                    printf(" maxfiles = %d", maxfiles);
+                    printf("\n");
+                    printf("\n");
+
+                    break;
+
                 case SDL_SCANCODE_RETURN:
                     if (fconfig)
                     {
@@ -1387,7 +1540,7 @@ int main()
                             fmplay = 0;
                             nup = 0;
                             fplay = 1;
-                            fsolo = 1;
+                            flocal = 1;
                             break;
                         case 3:
                             fmenu = 1;
@@ -1399,7 +1552,7 @@ int main()
                             break;
                         }
                     }
-                    else if (fplay && fsolo && !ended)
+                    else if (fplay && flocal && !ended)
                     {
                         SDL_RenderClear(renderer);
                         loadTableau(renderer);
@@ -1412,6 +1565,7 @@ int main()
                         ended = 0;
                         fplay = 0;
                         fmenu = 1;
+                        flocal=0;
                         nuc = 0;
                         print_menu_opts(font, renderer, num);
                     }
