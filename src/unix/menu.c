@@ -160,7 +160,7 @@ void printText(TTF_Font *font, SDL_Renderer *renderer, SDL_Color color, char *te
 void print_menu_opts(TTF_Font *font, SDL_Renderer *renderer, int num)
 {
     SDL_RenderClear(renderer);
-    SDL_Surface *image = IMG_Load("image.jpeg");
+    SDL_Surface *image = IMG_Load("tries/images.jpeg");
     SDL_Texture *img_texture = NULL;
     if (!image)
     {
@@ -670,7 +670,7 @@ void checkligne(int *joueur)
     {
         for (int j = 0; j < 7; j++)
         {
-            if (tableau[i][j] == tableau[i][j + 1] && tableau[i][j] == tableau[i][j + 2] && tableau[i][j] == tableau[i][j + 3] && (tableau[i][j] == 1 || tableau[i][j] == 2))
+            if (tableau[i][j] == tableau[i][j + 1] && tableau[i][j] == tableau[i][j + 2] && tableau[i][j] == tableau[i][j + 3] && (tableau[i][j] == 1 || tableau[i][j] == 2)&& j+3<7)
             {
                 if (*joueur == 1)
                 {
@@ -698,7 +698,7 @@ void checkcol(int *joueur)
     {
         for (int j = 0; j < 7; j++)
         {
-            if (tableau[i][j] == tableau[i + 1][j] && tableau[i][j] == tableau[i + 2][j] && tableau[i][j] == tableau[i + 3][j] && (tableau[i][j] == 1 || tableau[i][j] == 2))
+            if (tableau[i][j] == tableau[i + 1][j] && tableau[i][j] == tableau[i + 2][j] && tableau[i][j] == tableau[i + 3][j] && (tableau[i][j] == 1 || tableau[i][j] == 2)&& i+3<7)
             {
                 if (*joueur == 1)
                 {
@@ -899,7 +899,7 @@ void print_replay_title()
 void print_files(TTF_Font *font, SDL_Renderer *renderer, int num)
 {
     SDL_RenderClear(renderer);
-    SDL_Surface *image = IMG_Load("image.jpeg");
+    SDL_Surface *image = IMG_Load("images.jpeg");
     SDL_Texture *img_texture = NULL;
     if (!image)
     {
