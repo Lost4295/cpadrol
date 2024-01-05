@@ -38,7 +38,7 @@ int main(int argc, char **args)
 	return 0;
 }
 
-int i = 0;
+int i = 1;
 bool loop()
 {
 
@@ -77,12 +77,14 @@ bool loop()
 				(i == 1) ? i = 6 : i--;
 				printf("%d\n", i);
 				printe(i, dest);
+				launchmusic(i);
 			}
 			else if (e.key.keysym.sym == SDLK_DOWN)
 			{
 				(i == 6) ? i = 1 : i++;
 				printf("%d\n", i);
 				printe(i, dest);
+				launchmusic(i);
 			}
 			else if (e.key.keysym.sym == SDLK_RETURN)
 			{
@@ -98,26 +100,20 @@ bool loop()
 
 	// Render texture
 	SDL_RenderCopy(renderer, texture, NULL, NULL);
+	printe(i, dest);
 
 	// Update window
 	SDL_RenderPresent(renderer);
 
 	return true;
 }
-void printe(int i, SDL_Rect dest)
+
+void launchmusic(int i)
 {
-	SDL_Surface *text;
-
-	char texte[100];
-
+	char musique[12];
 	char num[2];
 	num[0] = i + '0';
 	num[1] = '\0';
-	strcpy(texte, "Now playing: music ");
-	strcat(texte, num);
-	strcat(texte, ".mp3");
-	char musique[12];
-
 	strcpy(musique, "music");
 	strcat(musique, num);
 	strcat(musique, ".mp3");
@@ -125,7 +121,16 @@ void printe(int i, SDL_Rect dest)
 	Mix_FreeMusic(music);
 	music = Mix_LoadMUS(musique);
 	Mix_PlayMusic(music, -1);
-
+}
+void printe(int i, SDL_Rect dest)
+{
+	SDL_Surface *text;
+	char texte[100];
+	char num[2];
+	num[0] = i + '0';
+	num[1] = '\0';
+	strcpy(texte, "Now playing: music ");
+	strcat(texte, num);
 	SDL_Color col = {0, 0, 0};
 	text = TTF_RenderText_Solid(font, texte, col);
 	if (!text)

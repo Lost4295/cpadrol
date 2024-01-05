@@ -11,15 +11,21 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <string.h> 
+#include <string.h>
 #define IP_BUFFER_LEN 100
+
+
+//TODO : Faire le fichier config.txt (pseudo, couleur, image de fond, musique) ; faire la lecture de la musique et la couper;
+// TODO : nettoyer le tableau après chaque partie
+//TODO : Implémenter le multijoueur
+// TODO : ranger les fichiers dans des dossiers et cleaner tout
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 SDL_Texture *texture = NULL;
 SDL_Texture *text;
 TTF_Font *font, *tfont, *lfont;
-SDL_Rect rect = {100, 100, 100, 100}, dst = {0, 0, 0, 0},recte = {100, 140, 100, 100},rectt = {100, 200, 100, 100};
+SDL_Rect rect = {100, 100, 100, 100}, dst = {0, 0, 0, 0}, recte = {100, 140, 100, 100}, rectt = {100, 200, 100, 100};
 SDL_Rect title = {350, 15, 100, 100};
 SDL_Rect authors = {0, 400, 100, 100};
 SDL_Color black_color = {0, 0, 0, 255};
@@ -81,7 +87,8 @@ void pop(char *s)
     }
 }
 
-void print_bg(){
+void print_bg()
+{
     SDL_RenderClear(renderer);
     SDL_Surface *image = IMG_Load("image.jpeg");
     SDL_Texture *img_texture = NULL;
@@ -172,7 +179,7 @@ void printText(TTF_Font *font, SDL_Renderer *renderer, SDL_Color color, char *te
 
 void print_menu_opts(TTF_Font *font, SDL_Renderer *renderer, int num)
 {
-print_bg();
+    print_bg();
     SDL_Rect rects[4];
     rects[0].x = 50;
     rects[1].x = 50;
@@ -385,10 +392,17 @@ int SDL_RenderFillCircle(SDL_Renderer *renderer, int x, int y, int radius)
     return status;
 }
 
-int makeChooseCircle(SDL_Renderer *renderer, int num)
+int printChooseArrow(SDL_Renderer *renderer, int num)
 {
-    SDL_SetRenderDrawColor(renderer, 83, 28, 125, 14);
-    SDL_RenderFillCircle(renderer, num * 50 + 25, 6 * 50 + 25, 5);
+    SDL_Surface *image = IMG_Load("arrow.png");
+    SDL_Texture *img_texture = NULL;
+    if (!image)
+    {
+        printf("Erreur de chargement de l'image : %s", SDL_GetError());
+    }
+    img_texture = SDL_CreateTextureFromSurface(renderer, image);
+    SDL_Rect rect = {num * 50, 6 * 50, 50, 50};
+    SDL_RenderCopy(renderer, img_texture, NULL, &rect);
     SDL_Delay(50);
     print_turn();
     SDL_RenderPresent(renderer);
@@ -675,7 +689,7 @@ void checkligne(int *joueur)
     {
         for (int j = 0; j < 7; j++)
         {
-            if (tableau[i][j] == tableau[i][j + 1] && tableau[i][j] == tableau[i][j + 2] && tableau[i][j] == tableau[i][j + 3] && (tableau[i][j] == 1 || tableau[i][j] == 2)&& j+3<7)
+            if (tableau[i][j] == tableau[i][j + 1] && tableau[i][j] == tableau[i][j + 2] && tableau[i][j] == tableau[i][j + 3] && (tableau[i][j] == 1 || tableau[i][j] == 2) && j + 3 < 7)
             {
                 if (*joueur == 1)
                 {
@@ -703,7 +717,7 @@ void checkcol(int *joueur)
     {
         for (int j = 0; j < 7; j++)
         {
-            if (tableau[i][j] == tableau[i + 1][j] && tableau[i][j] == tableau[i + 2][j] && tableau[i][j] == tableau[i + 3][j] && (tableau[i][j] == 1 || tableau[i][j] == 2)&& i+3<7)
+            if (tableau[i][j] == tableau[i + 1][j] && tableau[i][j] == tableau[i + 2][j] && tableau[i][j] == tableau[i + 3][j] && (tableau[i][j] == 1 || tableau[i][j] == 2) && i + 3 < 7)
             {
                 if (*joueur == 1)
                 {
@@ -825,14 +839,14 @@ void printFileProperties(struct stat stats)
            dt.tm_hour, dt.tm_min, dt.tm_sec);
 }
 
-
-const char * get_ip()
+const char *get_ip()
 {
     // Read out "hostname -I" command output
     FILE *fd = popen("hostname -I", "r");
-    if(fd == NULL) {
-    fprintf(stderr, "Could not open pipe.\n");
-    return NULL;
+    if (fd == NULL)
+    {
+        fprintf(stderr, "Could not open pipe.\n");
+        return NULL;
     }
     // Put output into a string (static memory)
     static char buffer[IP_BUFFER_LEN];
@@ -854,7 +868,6 @@ const char * get_ip()
     printf("%s\n", ret);
     return ret;
 }
-
 
 int handledirectory()
 {
@@ -1288,7 +1301,7 @@ int main()
                         ended = 0;
                         fplay = 0;
                         fmenu = 1;
-                        flocal=0;
+                        flocal = 0;
                         nuc = 0;
                         print_menu_opts(font, renderer, num);
                     }
@@ -1315,7 +1328,7 @@ int main()
                         ended = 0;
                         fplay = 0;
                         fmenu = 1;
-                        flocal=0;
+                        flocal = 0;
                         nuc = 0;
                         print_menu_opts(font, renderer, num);
                     }
@@ -1323,7 +1336,7 @@ int main()
                     {
                         (nur == maxfiles - 2) ? nur = 0 : nur++;
                         print_files(font, renderer, nur);
-                    } 
+                    }
                     break;
                 case SDL_SCANCODE_LEFT:
                     printf("scancode left\n");
@@ -1332,16 +1345,17 @@ int main()
                         ended = 0;
                         fplay = 0;
                         fmenu = 1;
-                        flocal=0;
+                        flocal = 0;
                         nuc = 0;
                         print_menu_opts(font, renderer, num);
-                    } else if (fplay && flocal)
+                    }
+                    else if (fplay && flocal)
                     {
                         (nuc == 0) ? nuc = 6 : nuc--;
                         printf("scancode left : nuc = %d\n", nuc);
                         loadTableau(renderer);
                         SDL_Delay(50);
-                        makeChooseCircle(renderer, nuc);
+                        printChooseArrow(renderer, nuc);
                     }
                     break;
                 case SDL_SCANCODE_RIGHT:
@@ -1351,16 +1365,17 @@ int main()
                         ended = 0;
                         fplay = 0;
                         fmenu = 1;
-                        flocal=0;
+                        flocal = 0;
                         nuc = 0;
                         print_menu_opts(font, renderer, num);
-                    }else if (fplay && flocal)
+                    }
+                    else if (fplay && flocal)
                     {
                         (nuc == 6) ? nuc = 0 : nuc++;
                         printf("scancode right : nuc = %d\n", nuc);
                         loadTableau(renderer);
                         SDL_Delay(50);
-                        makeChooseCircle(renderer, nuc);
+                        printChooseArrow(renderer, nuc);
                     }
                     break;
                 case SDL_SCANCODE_S: // à enlever
@@ -1421,7 +1436,7 @@ int main()
                         quit = SDL_TRUE;
                     }
                     break;
-                                    case SDL_SCANCODE_F: // à enlever
+                case SDL_SCANCODE_F: // à enlever
                     printf("Flags :");
                     if (fmenu)
                     {
@@ -1463,10 +1478,12 @@ int main()
                     {
                         printf(" freplay");
                     }
-                    if(fauto){
+                    if (fauto)
+                    {
                         printf(" fauto");
                     }
-                    if (ended){
+                    if (ended)
+                    {
                         printf(" ended");
                     }
                     printf("\n");
@@ -1480,9 +1497,7 @@ int main()
                     printf(" maxfiles = %d", maxfiles);
                     printf("\n");
                     printf("\n");
-
                     break;
-
                 case SDL_SCANCODE_RETURN:
                     if (fconfig)
                     {
@@ -1556,7 +1571,7 @@ int main()
                         switch (nup)
                         {
                         case 0:
-                            fmplay= 0;
+                            fmplay = 0;
                             fserver = 1;
                             print_bg();
                             printText(font, renderer, white_color, "Votre IP est :", &rect);
@@ -1608,7 +1623,7 @@ int main()
                         ended = 0;
                         fplay = 0;
                         fmenu = 1;
-                        flocal=0;
+                        flocal = 0;
                         nuc = 0;
                         print_menu_opts(font, renderer, num);
                     }
@@ -1628,8 +1643,8 @@ int main()
         SDL_Delay(20);
     }
     statut = EXIT_SUCCESS;
-
     SDL_StopTextInput();
+
 /* On libère toutes nos ressources ici et on fait notre return*/
 Quit:
     if (NULL != renderer)
