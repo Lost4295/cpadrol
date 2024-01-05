@@ -6,18 +6,20 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <errno.h>
+#include <string.h> 
+#define IP_BUFFER_LEN 100
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 SDL_Texture *texture = NULL;
 SDL_Texture *text;
 TTF_Font *font, *tfont, *lfont;
-SDL_Rect rect = {100, 100, 100, 100}, dst = {0, 0, 0, 0};
+SDL_Rect rect = {100, 100, 100, 100}, dst = {0, 0, 0, 0},recte = {100, 140, 100, 100},rectt = {100, 200, 100, 100};
 SDL_Rect title = {350, 15, 100, 100};
 SDL_Rect authors = {0, 400, 100, 100};
 SDL_Color black_color = {0, 0, 0, 255};
@@ -25,7 +27,7 @@ SDL_Color red_color = {255, 0, 0, 255};
 SDL_Color yellow_color = {255, 255, 0, 255};
 SDL_Color white_color = {255, 255, 255, 255};
 char inputText[50];
-
+char ip[50];
 int num = 0, nus = 0, nup = 0, nuc = 0, nur = 0;
 int flocal = 0, fserver = 0, fclient = 0;
 int fmplay = 0, fmreplay = 0, fsettings = 0, fmenu = 0, fplay = 0, fconfig = 1, freplay = 0, fauto = -1;
@@ -79,6 +81,17 @@ void pop(char *s)
     }
 }
 
+void print_bg(){
+    SDL_RenderClear(renderer);
+    SDL_Surface *image = IMG_Load("image.jpeg");
+    SDL_Texture *img_texture = NULL;
+    if (!image)
+    {
+        printf("Erreur de chargement de l'image : %s", SDL_GetError());
+    }
+    img_texture = SDL_CreateTextureFromSurface(renderer, image);
+    SDL_RenderCopy(renderer, img_texture, NULL, NULL);
+}
 int init(SDL_Window **window, SDL_Renderer **renderer, int w, int h)
 {
     if (0 != SDL_Init(SDL_INIT_EVERYTHING))
@@ -159,15 +172,7 @@ void printText(TTF_Font *font, SDL_Renderer *renderer, SDL_Color color, char *te
 
 void print_menu_opts(TTF_Font *font, SDL_Renderer *renderer, int num)
 {
-    SDL_RenderClear(renderer);
-    SDL_Surface *image = IMG_Load("tries/images.jpeg");
-    SDL_Texture *img_texture = NULL;
-    if (!image)
-    {
-        printf("Erreur de chargement de l'image : %s", SDL_GetError());
-    }
-    img_texture = SDL_CreateTextureFromSurface(renderer, image);
-    SDL_RenderCopy(renderer, img_texture, NULL, NULL);
+print_bg();
     SDL_Rect rects[4];
     rects[0].x = 50;
     rects[1].x = 50;
@@ -819,6 +824,37 @@ void printFileProperties(struct stat stats)
     printf("\nModified on: %d-%d-%d %d:%d:%d", dt.tm_mday, dt.tm_mon, dt.tm_year + 1900,
            dt.tm_hour, dt.tm_min, dt.tm_sec);
 }
+
+
+const char * get_ip()
+{
+    // Read out "hostname -I" command output
+    FILE *fd = popen("hostname -I", "r");
+    if(fd == NULL) {
+    fprintf(stderr, "Could not open pipe.\n");
+    return NULL;
+    }
+    // Put output into a string (static memory)
+    static char buffer[IP_BUFFER_LEN];
+    fgets(buffer, IP_BUFFER_LEN, fd);
+
+    // Only keep the first ip.
+    for (int i = 0; i < IP_BUFFER_LEN; ++i)
+    {
+        if (buffer[i] == ' ')
+        {
+            buffer[i] = '\0';
+            break;
+        }
+    }
+
+    char *ret = malloc(strlen(buffer) + 1);
+    memcpy(ret, buffer, strlen(buffer));
+    ret[strlen(buffer)] = '\0';
+    printf("%s\n", ret);
+    return ret;
+}
+
 
 int handledirectory()
 {
@@ -1520,6 +1556,13 @@ int main()
                         switch (nup)
                         {
                         case 0:
+                            fmplay= 0;
+                            fserver = 1;
+                            print_bg();
+                            printText(font, renderer, white_color, "Votre IP est :", &rect);
+                            printText(font, renderer, white_color, get_ip(), &recte);
+                            printText(font, renderer, white_color, "En attente d'un client... Donnez cette IP à votre adversaire !", &rectt);
+                            SDL_RenderPresent(renderer);
                             break;
                         case 1:
                             break;
