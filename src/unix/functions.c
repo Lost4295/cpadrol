@@ -30,7 +30,12 @@ typedef struct in_addr IN_ADDR;
 #define MUSIC 2
 unsigned int PORT = 42069;
 #define LOOP 3
-
+#define MUTE 4
+int colorR = 20;
+int colorG = 25;
+int colorB = 25;
+int colorA = 145;
+#define SECRET "Zach"
 // TODO : Faire le fichier config.txt (pseudo, couleur, image de fond, musique) ;
 // TODO : Implémenter le multijoueur
 // TODO : ranger les fichiers dans des dossiers et cleaner tout
@@ -59,7 +64,7 @@ char ip[50];
 int num = 0, nus = 0, nup = 0, nuc = 0, nur = 0, numm = 1;
 int flocal = 0, fserver = 0, fclient = 0;
 int fmplay = 0, fmreplay = 0, fsettings = 0, fmenu = 0, fplay = 0, fconfig = 1, freplay = 0, fauto = -1, fchmusic = 0, fmauto = 0, floop = 1, fmute = 0;
-int ended = 0;
+int ended = 0, secret =0;
 int maxfiles = 0;
 char **menu[4];
 char **settingsmenu[4];
@@ -173,14 +178,22 @@ void launchmusic(int i)
 void print_bg()
 {
     SDL_RenderClear(renderer);
-    SDL_Surface *image = IMG_Load("image.jpeg");
-    SDL_Texture *img_texture = NULL;
-    if (!image)
+    if (secret)
     {
-        printf("Erreur de chargement de l'image : %s", SDL_GetError());
+        SDL_Surface *image = IMG_Load("image.jpeg");
+        SDL_Texture *img_texture = NULL;
+        if (!image)
+        {
+            printf("Erreur de chargement de l'image : %s", SDL_GetError());
+        }
+        img_texture = SDL_CreateTextureFromSurface(renderer, image);
+        SDL_RenderCopy(renderer, img_texture, NULL, NULL);
     }
-    img_texture = SDL_CreateTextureFromSurface(renderer, image);
-    SDL_RenderCopy(renderer, img_texture, NULL, NULL);
+    else
+    {
+        SDL_SetRenderDrawColor(renderer, colorR, colorG, colorB, colorA);
+        SDL_RenderFillRect(renderer, NULL);
+    }
 }
 
 int init(SDL_Window **window, SDL_Renderer **renderer, int w, int h)
@@ -310,7 +323,7 @@ void print_menu_opts(TTF_Font *font, SDL_Renderer *renderer, int num)
 
 void print_play_opts(TTF_Font *font, SDL_Renderer *renderer, int num)
 {
-print_bg();
+    print_bg();
     SDL_Rect rects[4];
     rects[0].x = 50;
     rects[1].x = 50;
@@ -457,6 +470,11 @@ void get_user_vars(TTF_Font *font, SDL_Renderer *renderer)
             char *ps = strtok(p, n);
             fmauto = atoi(ps);
             (fmauto) ? (floop = 0) : (floop = 1);
+        }
+        else if (strcmp(p, "Mute")==0){
+            p = strtok(NULL, d);
+            char *ps = strtok(p, n);
+            fmute = atoi(ps);
         }
     }
     printText(font, renderer, yellow_color, texte, &rect, black_color);
@@ -1516,15 +1534,6 @@ SOCKET tryconnects()
     system("cls");
     printtab();
     return csock;
-}
-
-void closesock(SOCKET sock)
-{ /* Fermeture de la socket */
-    printf("Fermeture de la socket...\n");
-    closesocket(sock);
-    printf("Fermeture du serveur terminee ! Appuyez sur entree pour continuer.\n");
-    getchar();
-    return EXIT_SUCCESS;
 }
 
 SOCKET tryconnectc(char *ip)

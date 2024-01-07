@@ -47,8 +47,20 @@ SOCKET tryconnects();
 void closesock(SOCKET sock);
 int replacer(int line, char *value);
 
-int main()
+int main(int argc, char *argv[])
 {
+    if (argc == 2 && strcmp(SECRET, argv[1]) == 0)
+    {
+        printf("You found the secret !\n");
+        printf("You can now play with the secret music !\n");
+        secret = 1;
+    }
+    else
+    {
+        printf("You didn't find the secret :(\n");
+        printf("You can't play with the secret music :(\n");
+        secret = 0;
+    }
     menu[0] = &play;
     menu[1] = &multiplayer;
     menu[2] = &settings;
@@ -127,14 +139,17 @@ int main()
                 return false;
             }
             // Play music forever
-            if (fmauto)
+            if (!fmute)
             {
-                Mix_PlayMusic(actmusic, 0);
-                Mix_HookMusicFinished(musicFinishedCallback);
-            }
-            else
-            {
-                Mix_PlayMusic(actmusic, -1);
+                if (fmauto)
+                {
+                    Mix_PlayMusic(actmusic, 0);
+                    Mix_HookMusicFinished(musicFinishedCallback);
+                }
+                else
+                {
+                    Mix_PlayMusic(actmusic, -1);
+                }
             }
         }
     }
@@ -416,7 +431,7 @@ int main()
                         fmplay = 0;
                         print_menu_opts(font, renderer, num);
                     }
-                    else if (fplay)
+                    else if (fplay && flocal)
                     {
                         fmenu = 1;
                         fplay = 0;
@@ -442,12 +457,14 @@ int main()
                     {
                         fmenu = 1;
                         fserver = 0;
+                        closesocket(sock);
                         print_menu_opts(font, renderer, num);
                     }
                     else if (fclient)
                     {
                         fmenu = 1;
                         fclient = 0;
+                        closesocket(sock);
                         print_menu_opts(font, renderer, num);
                     }
                     else if (freplay)
@@ -730,7 +747,17 @@ int main()
                             else
                             {
                                 printf("Connexion perdue.");
-                                // TODO : tout fermer
+                                closesocket(sock);
+                                SDL_Rect recter;
+                                recter.x = 400;
+                                recter.y = 50;
+                                printText(font, renderer, red_color, "La connexion a ete perdue.", &recter, black_color);
+                                SDL_Delay(2000);
+                                fplay = 0;
+                                fmenu = 1;
+                                j = 1;
+                                fclient = 0;
+                                fserver = 0;
                             }
                         }
                         SDL_RenderPresent(renderer);
@@ -762,7 +789,17 @@ int main()
                             else
                             {
                                 printf("Connexion perdue.");
-                                // TODO : tout fermer
+                                closesocket(sock);
+                                SDL_Rect recter;
+                                recter.x = 400;
+                                recter.y = 50;
+                                printText(font, renderer, red_color, "La connexion a ete perdue.", &recter, black_color);
+                                SDL_Delay(2000);
+                                fplay = 0;
+                                fmenu = 1;
+                                j = 1;
+                                fclient = 0;
+                                fserver = 0;
                             }
                         }
                         InsertCoin(renderer, nuc);
@@ -777,11 +814,13 @@ int main()
                     {
                         Mix_PauseMusic();
                         Mix_Pause(-1);
+                        replacer(MUTE, "Mute:1");
                     }
                     else
                     {
                         Mix_ResumeMusic();
                         Mix_Resume(-1);
+                        replacer(MUTE, "Mute:0");
                     }
                     break;
                 case SDL_SCANCODE_A:
@@ -865,4 +904,3 @@ Quit:
     sound = NULL;
     return statut;
 }
-
