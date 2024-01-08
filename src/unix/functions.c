@@ -37,6 +37,8 @@ int colorB = 25;
 int colorA = 145;
 #define SECRET "Zach"
 // TODO : Faire le fichier config.txt (pseudo, couleur, image de fond, musique) ;
+// TODO : ajouter le replayer qui crée tout
+// TODO : Enlever les touches quand gagné (ajouter juste un "Appuyer sur Entrée pour continuer")
 // TODO : Implémenter le multijoueur
 // TODO : ranger les fichiers dans des dossiers et cleaner tout
 // TODO : Handle les errors connes style (config mais pas de config dedans)

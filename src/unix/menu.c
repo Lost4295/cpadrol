@@ -5,7 +5,6 @@ void pop(char *s);
 void launchmusic(int i);
 void print_bg();
 void print_ip_renderer(TTF_Font *font, SDL_Renderer *renderer, char *texte);
-
 int init(SDL_Window **window, SDL_Renderer **renderer, int w, int h);
 SDL_Texture *loadImage(const char path[], SDL_Renderer *renderer);
 int setWindowColor(SDL_Renderer *renderer, SDL_Color color);
@@ -853,6 +852,7 @@ int main(int argc, char *argv[])
                 {
                     int rnum = cbuffer - '0';
                     InsertCoin(renderer, rnum);
+                    SDL_RenderClear(renderer);
                 }
             }
             else if (fserver && j == 2)
@@ -865,6 +865,7 @@ int main(int argc, char *argv[])
                 {
                     int rnum = buffer2 - '0';
                     InsertCoin(renderer, rnum);
+                    SDL_RenderClear(renderer);
                 }
             }
         }
