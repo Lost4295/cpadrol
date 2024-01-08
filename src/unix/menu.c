@@ -862,7 +862,6 @@ int main(int argc, char *argv[])
                 {
                     int rnum = cbuffer - '0';
                     InsertCoin(renderer, rnum);
-                    *pj=2;
                 }
             }
             else if (fserver && j == 2)
@@ -875,7 +874,6 @@ int main(int argc, char *argv[])
                 {
                     int rnum = buffer2 - '0';
                     InsertCoin(renderer, rnum);
-                    *pj = 1;
                 }
             }
         }
