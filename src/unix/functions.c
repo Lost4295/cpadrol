@@ -1197,7 +1197,6 @@ void print_music_title()
     }
     else
     {
-
         printText(font, renderer, white_color, loop, &rect, black_color);
     }
     if (fmauto)

@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
         }
         else if (event.type == SDL_KEYDOWN)
         {
-            if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE || event.key.keysym.scancode == SDL_SCANCODE_DELETE && (fconfig || fclient))
+            if (event.key.keysym.sym == SDLK_BACKSPACE || event.key.keysym.sym == SDLK_DELETE && (fconfig || fclient))
             {
                 printf("pop !");
                 pop(inputText);
@@ -242,10 +242,10 @@ int main(int argc, char *argv[])
             }
             else
             {
-                switch (event.key.keysym.scancode)
+                switch (event.key.keysym.sym)
                 {
-                case SDL_SCANCODE_UP:
-                    printf("scancode up\n");
+                case SDLK_UP:
+                    printf("sym up\n");
                     if (fmenu)
                     {
                         (num == 0) ? num = 3 : num--;
@@ -281,8 +281,8 @@ int main(int argc, char *argv[])
                         print_menu_opts(font, renderer, num);
                     }
                     break;
-                case SDL_SCANCODE_DOWN:
-                    printf("scancode down\n");
+                case SDLK_DOWN:
+                    printf("sym down\n");
                     if (fmenu)
                     {
                         (num == 3) ? num = 0 : num++;
@@ -318,8 +318,8 @@ int main(int argc, char *argv[])
                         printmusicfiles(font, renderer, numm);
                     }
                     break;
-                case SDL_SCANCODE_LEFT:
-                    printf("scancode left\n");
+                case SDLK_LEFT:
+                    printf("sym left\n");
                     if (ended)
                     {
                         ended = 0;
@@ -332,7 +332,7 @@ int main(int argc, char *argv[])
                     else if (fplay && flocal)
                     {
                         (nuc == 0) ? nuc = 6 : nuc--;
-                        printf("scancode left : nuc = %d\n", nuc);
+                        printf("sym left : nuc = %d\n", nuc);
                         loadTableau(renderer);
                         SDL_Delay(50);
                         printChooseArrow(renderer, nuc);
@@ -340,7 +340,7 @@ int main(int argc, char *argv[])
                     else if (fplay && fserver && j == 1)
                     {
                         (nuc == 0) ? nuc = 6 : nuc--;
-                        printf("scancode left : nuc = %d\n", nuc);
+                        printf("sym left : nuc = %d\n", nuc);
                         loadTableau(renderer);
                         SDL_Delay(50);
                         printChooseArrow(renderer, nuc);
@@ -348,14 +348,14 @@ int main(int argc, char *argv[])
                     else if (fplay && fclient && j == 2)
                     {
                         (nuc == 0) ? nuc = 6 : nuc--;
-                        printf("scancode left : nuc = %d\n", nuc);
+                        printf("sym left : nuc = %d\n", nuc);
                         loadTableau(renderer);
                         SDL_Delay(50);
                         printChooseArrow(renderer, nuc);
                     }
                     break;
-                case SDL_SCANCODE_RIGHT:
-                    printf("scancode right\n");
+                case SDLK_RIGHT:
+                    printf("sym right\n");
                     if (ended)
                     {
                         ended = 0;
@@ -368,7 +368,7 @@ int main(int argc, char *argv[])
                     else if (fplay && flocal)
                     {
                         (nuc == 6) ? nuc = 0 : nuc++;
-                        printf("scancode right : nuc = %d\n", nuc);
+                        printf("sym right : nuc = %d\n", nuc);
                         loadTableau(renderer);
                         SDL_Delay(50);
                         printChooseArrow(renderer, nuc);
@@ -376,7 +376,7 @@ int main(int argc, char *argv[])
                     else if (fplay && fserver && j == 1)
                     {
                         (nuc == 6) ? nuc = 0 : nuc++;
-                        printf("scancode right : nuc = %d\n", nuc);
+                        printf("sym right : nuc = %d\n", nuc);
                         loadTableau(renderer);
                         SDL_Delay(50);
                         printChooseArrow(renderer, nuc);
@@ -384,13 +384,13 @@ int main(int argc, char *argv[])
                     else if (fplay && fclient && j == 2)
                     {
                         (nuc == 6) ? nuc = 0 : nuc++;
-                        printf("scancode right : nuc = %d\n", nuc);
+                        printf("sym right : nuc = %d\n", nuc);
                         loadTableau(renderer);
                         SDL_Delay(50);
                         printChooseArrow(renderer, nuc);
                     }
                     break;
-                case SDL_SCANCODE_S: // à enlever
+                case SDLK_s: // à enlever
                     FILE *file = fopen("config.txt", "r");
                     char line[250];
                     char texte[250];
@@ -408,7 +408,7 @@ int main(int argc, char *argv[])
                         printf("Value : '%s'\n", ps);
                     }
                     break;
-                case SDL_SCANCODE_ESCAPE:
+                case SDLK_ESCAPE:
                     if (fmenu)
                     {
                         quit = SDL_TRUE;
@@ -477,7 +477,7 @@ int main(int argc, char *argv[])
                         SDL_RenderPresent(renderer);
                     }
                     break;
-                case SDL_SCANCODE_F: // à enlever
+                case SDLK_f: // à enlever
                     printf("Flags :");
                     if (fmenu)
                     {
@@ -539,7 +539,7 @@ int main(int argc, char *argv[])
                     printf("\n");
                     printf("\n");
                     break;
-                case SDL_SCANCODE_RETURN:
+                case SDLK_RETURN:
                     if (fconfig)
                     {
                         FILE *fptr;
@@ -807,7 +807,7 @@ int main(int argc, char *argv[])
                         j = 2;
                     }
                     break;
-                case SDL_SCANCODE_M:
+                case SDLK_m:
                     // mute music and all sounds
                     fmute = !fmute;
                     if (fmute)
@@ -823,7 +823,7 @@ int main(int argc, char *argv[])
                         replacer(MUTE, "Mute:0");
                     }
                     break;
-                case SDL_SCANCODE_A:
+                case SDLK_a:
                     // loop through music
                     printf("aaaaa\n");
                     if (fchmusic)
@@ -834,7 +834,7 @@ int main(int argc, char *argv[])
                         Mix_HookMusicFinished(musicFinishedCallback);
                     }
                     break;
-                case SDL_SCANCODE_L:
+                case SDLK_l:
                     printf("lllll\n");
                     // auto play music
                     if (fchmusic)
@@ -861,8 +861,8 @@ int main(int argc, char *argv[])
                 if (recv(sock, &cbuffer, sizeof(cbuffer), 0) != SOCKET_ERROR)
                 {
                     int rnum = cbuffer - '0';
-                    system("cls");
                     InsertCoin(renderer, rnum);
+                    *pj=2;
                 }
             }
             else if (fserver && j == 2)
@@ -873,7 +873,6 @@ int main(int argc, char *argv[])
                 char buffer2;
                 if (recv(sock, &buffer2, sizeof(buffer2), 0) != SOCKET_ERROR)
                 {
-                    system("cls");
                     int rnum = buffer2 - '0';
                     InsertCoin(renderer, rnum);
                     *pj = 1;
