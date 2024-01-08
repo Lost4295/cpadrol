@@ -729,14 +729,9 @@ int main(int argc, char *argv[])
                         {
                             Mix_PlayChannel(-1, sound, 0);
                         }
-                        InsertCoin(renderer, nuc);
                         char convert = nuc + '0';
                     senderc:
-                        if (send(sock, &convert, sizeof(convert), 0) != SOCKET_ERROR)
-                        {
-                            *pj = 1;
-                        }
-                        else
+                        if (send(sock, &convert, sizeof(convert), 0) == SOCKET_ERROR)
                         {
                             printf("Erreur de transmission\n");
                             terr++;
@@ -760,6 +755,7 @@ int main(int argc, char *argv[])
                                 fserver = 0;
                             }
                         }
+                        InsertCoin(renderer, nuc);
                         SDL_RenderPresent(renderer);
                     }
                     else if (fserver && fplay && !ended && j == 1)
@@ -774,11 +770,7 @@ int main(int argc, char *argv[])
                         }
                         buffer = nuc + '0';
                     senders:
-                        if (send(sock, &buffer, sizeof(buffer), 0) != SOCKET_ERROR)
-                        {
-                            *pj = 2;
-                        }
-                        else
+                        if (send(sock, &buffer, sizeof(buffer), 0) == SOCKET_ERROR)
                         {
                             printf("Erreur de transmission\n");
                             terr++;
@@ -804,7 +796,6 @@ int main(int argc, char *argv[])
                         }
                         InsertCoin(renderer, nuc);
                         SDL_RenderPresent(renderer);
-                        j = 2;
                     }
                     break;
                 case SDLK_m:
