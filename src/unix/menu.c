@@ -45,6 +45,8 @@ SOCKET tryconnectc(char *ip);
 SOCKET tryconnects();
 void closesock(SOCKET sock);
 int replacer(int line, char *value);
+int convertvalue(int v);
+void createfile();
 
 int main(int argc, char *argv[])
 {
@@ -74,6 +76,24 @@ int main(int argc, char *argv[])
     playmenu[1] = &client;
     playmenu[2] = &local;
     playmenu[3] = &retour;
+
+    volume_knob.y = volume_rect.y;
+    volume_knob.h = volume_rect.h;
+    volume_knob.w = 20;
+    volume_knob.x = (volume_rect.x + volume_rect.w) - volume_knob.w;
+    volume_knob2.y = volume_rect2.y;
+    volume_knob2.h = volume_rect2.h;
+    volume_knob2.w = 20;
+    volume_knob2.x = (volume_rect2.x + volume_rect2.w) - volume_knob2.w;
+    volume_knob3.y = volume_rect3.y;
+    volume_knob3.h = volume_rect3.h;
+    volume_knob3.w = 20;
+    volume_knob3.x = (volume_rect3.x + volume_rect3.w) - volume_knob3.w;
+    volume_knob4.y = volume_rect4.y;
+    volume_knob4.h = volume_rect4.h;
+    volume_knob4.w = 20;
+    volume_knob4.x = (volume_rect4.x + volume_rect4.w) - volume_knob4.w;
+
     /* On fait toutes nos initialisations ici */
     int statut = EXIT_FAILURE;
     if (init(&window, &renderer, width, height) < 0)
@@ -115,8 +135,10 @@ int main(int argc, char *argv[])
     SDL_RenderPresent(renderer);
     SDL_Delay(1000);
     DIR *test = opendir("replays");
-    // tODO :check si tous les dossiers sont là et sinon les créer
-    if (file_exists("config.txt") && test)
+    long int res = findSize("config.txt"); 
+
+    // TODO :check si tous les dossiers sont là et sinon les créer
+    if (file_exists("config.txt") && test && res)
     {
         fconfig = 0;
         fmenu = 1;
@@ -179,6 +201,7 @@ int main(int argc, char *argv[])
                 printf("Error while checking if directory exists.\n");
             }
         }
+        createfile();
         SDL_StartTextInput();
         setWindowColor(renderer, black_color);
         print_pseudo_maker(font, renderer, " ");
@@ -196,40 +219,6 @@ int main(int argc, char *argv[])
             // Append character
             append(inputText, *event.text.text);
             renderText = SDL_TRUE;
-        }
-        if (renderText)
-        {
-            // Text is not empty
-            if (strlen(inputText) > 0)
-            {
-                // Render new text
-                if (fconfig)
-                {
-                    setWindowColor(renderer, black_color);
-                    print_pseudo_maker(font, renderer, inputText);
-                }
-                if (fclient)
-                {
-                    print_bg();
-                    print_ip_renderer(font, renderer, inputText);
-                }
-            }
-            // Text is empty
-            else
-            {
-                printf("Empty text\n");
-                // Render space texture
-                if (fconfig)
-                {
-                    setWindowColor(renderer, black_color);
-                    print_pseudo_maker(font, renderer, " ");
-                }
-                if (fclient)
-                {
-                    print_bg();
-                    print_ip_renderer(font, renderer, inputText);
-                }
-            }
         }
         else if (event.type == SDL_KEYDOWN)
         {
@@ -475,6 +464,16 @@ int main(int argc, char *argv[])
                         maxfiles = printreplayfiles();
                         SDL_RenderPresent(renderer);
                     }
+                    else if (fccolor)
+                    {
+                        fccolor = 0;
+                        fsettings = 1;
+                        replacer(RED, "Red:");
+                        replacer(GREEN, "Green:");
+                        replacer(BLUE, "Blue:");
+                        replacer(ALPHA, "Alpha:");
+                        print_settings_opts(font, renderer, nus);
+                    }
                     break;
                 case SDLK_f: // à enlever
                     printf("Flags :");
@@ -526,6 +525,26 @@ int main(int argc, char *argv[])
                     {
                         printf(" ended");
                     }
+                    if (fchmusic)
+                    {
+                        printf(" fchmusic");
+                    }
+                    if (fmauto)
+                    {
+                        printf(" fmauto");
+                    }
+                    if (floop)
+                    {
+                        printf(" floop");
+                    }
+                    if (fmute)
+                    {
+                        printf(" fmute");
+                    }
+                    if (secret)
+                    {
+                        printf(" secret");
+                    }
                     printf("\n");
                     printf("Variables :");
                     printf(" num = %d", num);
@@ -533,6 +552,12 @@ int main(int argc, char *argv[])
                     printf(" nup = %d", nup);
                     printf(" nur = %d", nur);
                     printf(" nuc = %d", nuc);
+                    printf("numm = %d", numm);
+                    printf(" j = %d", j);
+                    printf("colorR = %d", colorR);
+                    printf(" colorG = %d", colorG);
+                    printf(" colorB = %d", colorB);
+                    printf(" colorA = %d", colorA);
                     printf(" pj = %d", j);
                     printf(" maxfiles = %d", maxfiles);
                     printf("\n");
@@ -541,11 +566,10 @@ int main(int argc, char *argv[])
                 case SDLK_RETURN:
                     if (fconfig)
                     {
-                        FILE *fptr;
-                        printf("Wrinting '%s' into file\n", inputText);
-                        fptr = fopen("config.txt", "a+");
-                        fprintf(fptr, "Pseudo:%s\n\n\n", inputText);
-                        fclose(fptr);
+                        char etet[70];
+                        strcpy(etet, "Pseudo:");
+                        strcat(etet, inputText);
+                        replacer(PSEUDO, etet);
                         fmenu = 1;
                         fconfig = 0;
                         print_menu_opts(font, renderer, num);
@@ -588,6 +612,11 @@ int main(int argc, char *argv[])
                         switch (nus)
                         {
                         case 0:
+                            fsettings = 0;
+                            fccolor = 1;
+                            print_bg();
+                            print_volume();
+                            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Changement de Couleur", "Appuyez sur Echap pour quitter.", NULL);
                             break;
                         case 1:
                             fsettings = 0;
@@ -840,6 +869,51 @@ int main(int argc, char *argv[])
                 }
             }
         }
+        else if (event.type == SDL_MOUSEMOTION)
+        {
+            const SDL_Point pt = {event.motion.x, event.motion.y};
+            if (fccolor)
+            {
+                if (SDL_PointInRect(&pt, &volume_rect) && (event.motion.state & SDL_BUTTON_LMASK))
+                { // mouse is pressed inside the "volume" "slider"?
+                    const float fx = (float)(pt.x - volume_rect.x);
+                    volume_slider_value = (fx / ((float)volume_rect.w)); // a value between 0.0f and 1.0f
+                    printf("SLIDING 1! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(volume_slider_value * 100.0f));
+                    volume_knob.x = pt.x - (volume_knob.w / 2);
+                    volume_knob.x = SDL_max(volume_knob.x, volume_rect.x);
+                    volume_knob.x = SDL_min(volume_knob.x, (volume_rect.x + volume_rect.w) - volume_knob.w);
+                }
+                else if (SDL_PointInRect(&pt, &volume_rect2) && (event.motion.state & SDL_BUTTON_LMASK))
+                { // mouse is pressed inside the "volume" "slider"?
+                    const float fx = (float)(pt.x - volume_rect2.x);
+                    volume_slider_value2 = (fx / ((float)volume_rect2.w)); // a value between 0.0f and 1.0f
+                    printf("SLIDING 2 ! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(volume_slider_value2 * 100.0f));
+                    volume_knob2.x = pt.x - (volume_knob2.w / 2);
+                    volume_knob2.x = SDL_max(volume_knob2.x, volume_rect2.x);
+                    volume_knob2.x = SDL_min(volume_knob2.x, (volume_rect2.x + volume_rect2.w) - volume_knob2.w);
+                }
+                else if (SDL_PointInRect(&pt, &volume_rect3) && (event.motion.state & SDL_BUTTON_LMASK))
+                { // mouse is pressed inside the "volume" "slider"?
+                    const float fx = (float)(pt.x - volume_rect3.x);
+                    volume_slider_value3 = (fx / ((float)volume_rect3.w)); // a value between 0.0f and 1.0f
+                    printf("SLIDING 3! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(volume_slider_value3 * 100.0f));
+                    volume_knob3.x = pt.x - (volume_knob3.w / 2);
+                    volume_knob3.x = SDL_max(volume_knob3.x, volume_rect3.x);
+                    volume_knob3.x = SDL_min(volume_knob3.x, (volume_rect3.x + volume_rect3.w) - volume_knob3.w);
+                }
+                else if (SDL_PointInRect(&pt, &volume_rect4) && (event.motion.state & SDL_BUTTON_LMASK))
+                { // mouse is pressed inside the "volume" "slider"?
+                    const float fx = (float)(pt.x - volume_rect4.x);
+                    volume_slider_value4 = (fx / ((float)volume_rect4.w)); // a value between 0.0f and 1.0f
+                    printf("SLIDING 4! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(volume_slider_value4 * 100.0f));
+                    volume_knob4.x = pt.x - (volume_knob4.w / 2);
+                    volume_knob4.x = SDL_max(volume_knob4.x, volume_rect4.x);
+                    volume_knob4.x = SDL_min(volume_knob4.x, (volume_rect4.x + volume_rect4.w) - volume_knob4.w);
+                }
+                print_bg();
+                print_volume();
+            }
+        }
         if (fplay && !ended)
         {
             if (fclient && j == 1)
@@ -869,7 +943,41 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        SDL_Delay(20);
+        if (renderText)
+        {
+            // Text is not empty
+            if (strlen(inputText) > 0)
+            {
+                // Render new text
+                if (fconfig)
+                {
+                    setWindowColor(renderer, black_color);
+                    print_pseudo_maker(font, renderer, inputText);
+                }
+                if (fclient)
+                {
+                    print_bg();
+                    print_ip_renderer(font, renderer, inputText);
+                }
+            }
+            // Text is empty
+            else
+            {
+                printf("Empty text\n");
+                // Render space texture
+                if (fconfig)
+                {
+                    setWindowColor(renderer, black_color);
+                    print_pseudo_maker(font, renderer, " ");
+                }
+                if (fclient)
+                {
+                    print_bg();
+                    print_ip_renderer(font, renderer, inputText);
+                }
+            }
+        }
+        // SDL_Delay(20);
     }
     statut = EXIT_SUCCESS;
     SDL_StopTextInput();

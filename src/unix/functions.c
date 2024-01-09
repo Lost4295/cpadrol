@@ -31,12 +31,29 @@ typedef struct in_addr IN_ADDR;
 unsigned int PORT = 42069;
 #define LOOP 3
 #define MUTE 4
+#define PSEUDO 1
+#define RED 5
+#define GREEN 6
+#define BLUE 7
+#define ALPHA 8
 int colorR = 20;
 int colorG = 25;
 int colorB = 25;
 int colorA = 145;
 #define SECRET "Zach"
-// TODO : Faire le fichier config.txt (pseudo, couleur, image de fond, musique) ;
+const SDL_Rect volume_rect = {(640 - 500) / 2, 200, 500, 20};
+const SDL_Rect volume_rect2 = {(640 - 500) / 2, 300, 500, 20};
+const SDL_Rect volume_rect3 = {(640 - 500) / 2, 400, 500, 20};
+const SDL_Rect volume_rect4 = {(640 - 500) / 2, 500, 500, 20};
+SDL_Rect volume_knob;
+SDL_Rect volume_knob2;
+SDL_Rect volume_knob3;
+SDL_Rect volume_knob4;
+static float volume_slider_value = 1.0f;
+static float volume_slider_value2 = 1.0f;
+static float volume_slider_value3 = 1.0f;
+static float volume_slider_value4 = 1.0f;
+// TODO : Faire les vérifs du fichier de config;
 // TODO : ajouter le replayer qui crée tout
 // TODO : Enlever les touches quand gagné (ajouter juste un "Appuyer sur Entrée pour continuer")
 // TODO : Implémenter le multijoueur
@@ -65,14 +82,16 @@ char inputText[50];
 char ip[50];
 int num = 0, nus = 0, nup = 0, nuc = 0, nur = 0, numm = 1;
 int flocal = 0, fserver = 0, fclient = 0;
-int fmplay = 0, fmreplay = 0, fsettings = 0, fmenu = 0, fplay = 0, fconfig = 1, freplay = 0, fauto = -1, fchmusic = 0, fmauto = 0, floop = 1, fmute = 0;
-int ended = 0, secret =0;
+int fmplay = 0, fmreplay = 0, fccolor = 0, fsettings = 0, fmenu = 0, fplay = 0, fconfig = 1, freplay = 0, fauto = -1, fchmusic = 0, fmauto = 0, floop = 1, fmute = 0;
+int ended = 0, secret = 0;
 int maxfiles = 0;
 char **menu[4];
 char **settingsmenu[4];
 char **playmenu[4];
 char path[50];
 char buffer;
+FILE* replayfile;
+
 
 char *play = "Play";
 char *multiplayer = "Watch a replay";
@@ -88,6 +107,8 @@ char *mscolor = "Modify Screen Color";
 char *mpseudo = "Modify Pseudo";
 char *loop = "(L)oop music";
 char *autoo = "(A)uto play";
+
+char *echtoex = "Appuyez sur Echap pour quitter";
 
 #define ROUGE "\033[31;01;51m"
 #define JAUNE "\033[33;01m"
@@ -473,7 +494,8 @@ void get_user_vars(TTF_Font *font, SDL_Renderer *renderer)
             fmauto = atoi(ps);
             (fmauto) ? (floop = 0) : (floop = 1);
         }
-        else if (strcmp(p, "Mute")==0){
+        else if (strcmp(p, "Mute") == 0)
+        {
             p = strtok(NULL, d);
             char *ps = strtok(p, n);
             fmute = atoi(ps);
@@ -902,7 +924,8 @@ void checkdiag(int *joueur)
     {
         for (int j = 0; j < 7; j++)
         {
-            if (tableau[i][j] == tableau[i + 1][j + 1] && tableau[i][j] == tableau[i + 2][j + 2] && tableau[i][j] == tableau[i + 3][j + 3] && (tableau[i][j] == 1 || tableau[i][j] == 2))
+            if (tableau[i][j] == tableau[i + 1][j + 1] && tableau[i][j] == tableau[i + 2][j + 2] && tableau[i][j] == tableau[i + 3][j + 3] &&
+                (tableau[i][j] == 1 || tableau[i][j] == 2) && i + 3 <= 5 && j + 3 <= 6)
             {
                 if (*joueur == 1)
                 {
@@ -920,7 +943,8 @@ void checkdiag(int *joueur)
                 }
                 return endgame(joueur, 1);
             }
-            else if (tableau[i][j] == tableau[i + 1][j - 1] && tableau[i][j] == tableau[i + 2][j - 2] && tableau[i][j] == tableau[i + 3][j - 3] && (tableau[i][j] == 1 || tableau[i][j] == 2))
+            else if (tableau[i][j] == tableau[i + 1][j - 1] && tableau[i][j] == tableau[i + 2][j - 2] && tableau[i][j] == tableau[i + 3][j - 3] &&
+                     (tableau[i][j] == 1 || tableau[i][j] == 2) && i + 3 <= 5 && j - 3 >= 0)
             {
                 if (*joueur == 1)
                 {
@@ -1568,4 +1592,64 @@ SOCKET tryconnectc(char *ip)
     system("cls");
     printtab();
     return sock;
+}
+
+int convertvalue(int v)
+{
+    return v * 255 / 100;
+}
+
+void print_volume()
+{
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderFillRect(renderer, &volume_rect);
+    SDL_RenderFillRect(renderer, &volume_rect2);
+    SDL_RenderFillRect(renderer, &volume_rect3);
+    SDL_RenderFillRect(renderer, &volume_rect);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+    SDL_RenderFillRect(renderer, &volume_knob);
+    SDL_RenderFillRect(renderer, &volume_knob2);
+    SDL_RenderFillRect(renderer, &volume_knob3);
+    SDL_RenderFillRect(renderer, &volume_knob4);
+    SDL_RenderPresent(renderer);
+    colorR = convertvalue((int)SDL_round(volume_slider_value * 100.0f));
+    colorG = convertvalue((int)SDL_round(volume_slider_value2 * 100.0f));
+    colorB = convertvalue((int)SDL_round(volume_slider_value3 * 100.0f));
+    colorA = convertvalue((int)SDL_round(volume_slider_value4 * 100.0f));
+}
+void createfile()
+{
+    FILE *fptr;
+    printf("Writing file\n");
+    fptr = fopen("config.txt", "w");
+    fprintf(fptr, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+    fclose(fptr);
+}
+
+long int findSize(char file_name[]) 
+{ 
+	// opening the file in read mode 
+	FILE* fp = fopen(file_name, "r"); 
+
+	// checking if the file exist or not 
+	if (fp == NULL) { 
+		printf("File Not Found!\n"); 
+		return -1; 
+	} 
+
+	fseek(fp, 0L, SEEK_END); 
+
+	// calculating the size of the file 
+	long int res = ftell(fp); 
+	// closing the file 
+	fclose(fp); 
+
+	return res; 
+}
+
+FILE createReplay(){
+    FILE *fptr;
+    printf("Writing file\n");
+    fptr = fopen("replays/replay.txt", "w");
+    return *fptr;
 }

@@ -39,7 +39,7 @@ int main(int argc, char **argv)
         panic_and_abort("SDL_CreateRenderer failed", SDL_GetError());
     }
 
-    SDL_bool paused = SDL_TRUE;
+
     const SDL_Rect volume_rect = {(640 - 500) / 2, 400, 500, 20};
     const SDL_Rect volume_rect2 = {(640 - 500) / 2, 300, 500, 20};
     const SDL_Rect volume_rect3 = {(640 - 500) / 2, 200, 500, 20};
@@ -64,7 +64,8 @@ int main(int argc, char **argv)
 
     int green = 0;
     int red = 0;
-    int blue = 0;
+    int blue = 0;        SDL_SetRenderDrawColor(renderer, blue, green, red, 255);
+        SDL_RenderClear(renderer);
     SDL_bool keep_going = SDL_TRUE;
     while (keep_going)
     {
@@ -163,6 +164,6 @@ int main(int argc, char **argv)
 
     return 0;
 }
-int convertvalue(int oldValue) {
-    return oldValue * 255 / 100;
+int convertvalue(int v) {
+    return v * 255 / 100;
 }
