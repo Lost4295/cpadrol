@@ -25,7 +25,7 @@ void verifywin(int *joueur);
 int SDL_RenderFillCircle(SDL_Renderer *renderer, int x, int y, int radius);
 int printChooseArrow(SDL_Renderer *renderer, int num);
 int createTableau(SDL_Renderer *renderer);
-int InsertCoin(SDL_Renderer *renderer, int num);
+int InsertCoin(SDL_Renderer *renderer, int num, FILE *replayfile);
 void turnsreplay(char *p);
 void createtab();
 void printtab();
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
         secret = 0;
     }
     menu[0] = &play;
-    menu[1] = &multiplayer;
+    menu[1] = &replay;
     menu[2] = &settings;
     menu[3] = &quit;
 
@@ -77,22 +77,22 @@ int main(int argc, char *argv[])
     playmenu[2] = &local;
     playmenu[3] = &retour;
 
-    volume_knob.y = volume_rect.y;
-    volume_knob.h = volume_rect.h;
-    volume_knob.w = 20;
-    volume_knob.x = (volume_rect.x + volume_rect.w) - volume_knob.w;
-    volume_knob2.y = volume_rect2.y;
-    volume_knob2.h = volume_rect2.h;
-    volume_knob2.w = 20;
-    volume_knob2.x = (volume_rect2.x + volume_rect2.w) - volume_knob2.w;
-    volume_knob3.y = volume_rect3.y;
-    volume_knob3.h = volume_rect3.h;
-    volume_knob3.w = 20;
-    volume_knob3.x = (volume_rect3.x + volume_rect3.w) - volume_knob3.w;
-    volume_knob4.y = volume_rect4.y;
-    volume_knob4.h = volume_rect4.h;
-    volume_knob4.w = 20;
-    volume_knob4.x = (volume_rect4.x + volume_rect4.w) - volume_knob4.w;
+    color_knob.y = color_rect.y;
+    color_knob.h = color_rect.h;
+    color_knob.w = 20;
+    color_knob.x = (color_rect.x + color_rect.w) - color_knob.w;
+    color_knob2.y = color_rect2.y;
+    color_knob2.h = color_rect2.h;
+    color_knob2.w = 20;
+    color_knob2.x = (color_rect2.x + color_rect2.w) - color_knob2.w;
+    color_knob3.y = color_rect3.y;
+    color_knob3.h = color_rect3.h;
+    color_knob3.w = 20;
+    color_knob3.x = (color_rect3.x + color_rect3.w) - color_knob3.w;
+    color_knob4.y = color_rect4.y;
+    color_knob4.h = color_rect4.h;
+    color_knob4.w = 20;
+    color_knob4.x = (color_rect4.x + color_rect4.w) - color_knob4.w;
 
     /* On fait toutes nos initialisations ici */
     int statut = EXIT_FAILURE;
@@ -108,7 +108,6 @@ int main(int argc, char *argv[])
         printf("Error loading bgfont: %s\n", TTF_GetError());
         return -1;
     }
-    setWindowColor(renderer, black_color);
     SDL_Surface *image = IMG_Load("p.jpg");
     SDL_Texture *img_texture = NULL;
     if (!image)
@@ -122,21 +121,14 @@ int main(int argc, char *argv[])
         return false;
     }
 
-    sound = Mix_LoadWAV("music/n/scratch.wav");
-    if (!sound)
-    {
-        printf("Error loading sound: %s\n", Mix_GetError());
-        return false;
-    }
     img_texture = SDL_CreateTextureFromSurface(renderer, image);
     SDL_RenderCopy(renderer, img_texture, NULL, NULL);
     print_main_title();
-    printText(lfont, renderer, black_color, "Realise par Mathis Vareilles, Ylan Turin--Kondi et Zacharie Roger", &authors, white_color);
+    printText(lfont, renderer, black_color, "Realisé par Mathis Vareilles, Ylan Turin--Kondi et Zacharie Roger", &authors, white_color);
     SDL_RenderPresent(renderer);
     SDL_Delay(1000);
     DIR *test = opendir("replays");
-    long int res = findSize("config.txt"); 
-
+    long int res = findSize("config.txt");
     // TODO :check si tous les dossiers sont là et sinon les créer
     if (file_exists("config.txt") && test && res)
     {
@@ -259,15 +251,6 @@ int main(int argc, char *argv[])
                         (numm == 0) ? numm = 5 : numm--;
                         printmusicfiles(font, renderer, numm);
                     }
-                    if (ended)
-                    {
-                        ended = 0;
-                        fplay = 0;
-                        fmenu = 1;
-                        flocal = 0;
-                        nuc = 0;
-                        print_menu_opts(font, renderer, num);
-                    }
                     break;
                 case SDLK_DOWN:
                     printf("sym down\n");
@@ -286,15 +269,6 @@ int main(int argc, char *argv[])
                         (nus == 3) ? nus = 0 : nus++;
                         print_settings_opts(font, renderer, nus);
                     }
-                    if (ended)
-                    {
-                        ended = 0;
-                        fplay = 0;
-                        fmenu = 1;
-                        flocal = 0;
-                        nuc = 0;
-                        print_menu_opts(font, renderer, num);
-                    }
                     if (fmreplay)
                     {
                         (nur == maxfiles - 2) ? nur = 0 : nur++;
@@ -308,16 +282,7 @@ int main(int argc, char *argv[])
                     break;
                 case SDLK_LEFT:
                     printf("sym left\n");
-                    if (ended)
-                    {
-                        ended = 0;
-                        fplay = 0;
-                        fmenu = 1;
-                        flocal = 0;
-                        nuc = 0;
-                        print_menu_opts(font, renderer, num);
-                    }
-                    else if (fplay && flocal)
+                    if (fplay && flocal)
                     {
                         (nuc == 0) ? nuc = 6 : nuc--;
                         printf("sym left : nuc = %d\n", nuc);
@@ -344,16 +309,7 @@ int main(int argc, char *argv[])
                     break;
                 case SDLK_RIGHT:
                     printf("sym right\n");
-                    if (ended)
-                    {
-                        ended = 0;
-                        fplay = 0;
-                        fmenu = 1;
-                        flocal = 0;
-                        nuc = 0;
-                        print_menu_opts(font, renderer, num);
-                    }
-                    else if (fplay && flocal)
+                    if (fplay && flocal)
                     {
                         (nuc == 6) ? nuc = 0 : nuc++;
                         printf("sym right : nuc = %d\n", nuc);
@@ -468,11 +424,44 @@ int main(int argc, char *argv[])
                     {
                         fccolor = 0;
                         fsettings = 1;
-                        replacer(RED, "Red:");
-                        replacer(GREEN, "Green:");
-                        replacer(BLUE, "Blue:");
-                        replacer(ALPHA, "Alpha:");
+                        char text[20];
+                        char text2[20];
+                        char text3[20];
+                        char text4[20];
+                        strcpy(text, "Red:");
+                        strcpy(text2, "Green:");
+                        strcpy(text3, "Blue:");
+                        strcpy(text4, "Alpha:");
+                        char num[4];
+                        sprintf(num, "%d", colorR);
+                        strcat(text, num);
+                        sprintf(num, "%d", colorG);
+                        strcat(text2, num);
+                        sprintf(num, "%d", colorB);
+                        strcat(text3, num);
+                        sprintf(num, "%d", colorA);
+                        strcat(text4, num);
+                        replacer(RED, text);
+                        replacer(GREEN, text2);
+                        replacer(BLUE, text3);
+                        replacer(ALPHA, text4);
                         print_settings_opts(font, renderer, nus);
+                    }
+                    else if (ended)
+                    {
+                        ended = 0;
+                        fplay = 0;
+                        fmenu = 1;
+                        flocal = 0;
+                        nuc = 0;
+                        Mix_FreeChunk(sound1);
+                        Mix_FreeChunk(sound2);
+                        Mix_FreeChunk(sound3);
+                        Mix_FreeChunk(sound4);
+                        Mix_FreeChunk(error);
+                        Mix_FreeChunk(win);
+                        Mix_FreeChunk(actsound);
+                        print_menu_opts(font, renderer, num);
                     }
                     break;
                 case SDLK_f: // à enlever
@@ -615,7 +604,7 @@ int main(int argc, char *argv[])
                             fsettings = 0;
                             fccolor = 1;
                             print_bg();
-                            print_volume();
+                            print_color();
                             SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Changement de Couleur", "Appuyez sur Echap pour quitter.", NULL);
                             break;
                         case 1:
@@ -672,6 +661,8 @@ int main(int argc, char *argv[])
                             SDL_RenderFillRect(renderer, NULL);
                             SDL_RenderPresent(renderer);
                             SDL_Delay(500);
+                            loadSounds();
+                            createReplay();
                             createTableau(renderer);
                             print_turn();
                             fmplay = 0;
@@ -696,9 +687,10 @@ int main(int argc, char *argv[])
                         SDL_Delay(50);
                         if (!fmute)
                         {
-                            Mix_PlayChannel(-1, sound, 0);
+                            actsound = chooseRandSound();
+                            Mix_PlayChannel(-1, actsound, 0);
                         }
-                        InsertCoin(renderer, nuc);
+                        InsertCoin(renderer, nuc, replayfile);
                         SDL_RenderPresent(renderer);
                     }
                     else if (ended)
@@ -709,7 +701,15 @@ int main(int argc, char *argv[])
                         flocal = 0;
                         nuc = 0;
                         j = 1;
+                        closereplay();
                         createtab();
+                        Mix_FreeChunk(sound1);
+                        Mix_FreeChunk(sound2);
+                        Mix_FreeChunk(sound3);
+                        Mix_FreeChunk(sound4);
+                        Mix_FreeChunk(error);
+                        Mix_FreeChunk(win);
+                        Mix_FreeChunk(actsound);
                         print_menu_opts(font, renderer, num);
                     }
                     else if (fmreplay)
@@ -755,7 +755,8 @@ int main(int argc, char *argv[])
                         SDL_Delay(50);
                         if (!fmute)
                         {
-                            Mix_PlayChannel(-1, sound, 0);
+                            actsound = chooseRandSound();
+                            Mix_PlayChannel(-1, actsound, 0);
                         }
                         char convert = nuc + '0';
                     senderc:
@@ -783,7 +784,7 @@ int main(int argc, char *argv[])
                                 fserver = 0;
                             }
                         }
-                        InsertCoin(renderer, nuc);
+                        InsertCoin(renderer, nuc, replayfile);
                         SDL_RenderPresent(renderer);
                     }
                     else if (fserver && fplay && !ended && j == 1)
@@ -794,7 +795,8 @@ int main(int argc, char *argv[])
                         SDL_Delay(50);
                         if (!fmute)
                         {
-                            Mix_PlayChannel(-1, sound, 0);
+                            actsound = chooseRandSound();
+                            Mix_PlayChannel(-1, actsound, 0);
                         }
                         buffer = nuc + '0';
                     senders:
@@ -822,7 +824,7 @@ int main(int argc, char *argv[])
                                 fserver = 0;
                             }
                         }
-                        InsertCoin(renderer, nuc);
+                        InsertCoin(renderer, nuc, replayfile);
                         SDL_RenderPresent(renderer);
                     }
                     break;
@@ -874,44 +876,44 @@ int main(int argc, char *argv[])
             const SDL_Point pt = {event.motion.x, event.motion.y};
             if (fccolor)
             {
-                if (SDL_PointInRect(&pt, &volume_rect) && (event.motion.state & SDL_BUTTON_LMASK))
-                { // mouse is pressed inside the "volume" "slider"?
-                    const float fx = (float)(pt.x - volume_rect.x);
-                    volume_slider_value = (fx / ((float)volume_rect.w)); // a value between 0.0f and 1.0f
-                    printf("SLIDING 1! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(volume_slider_value * 100.0f));
-                    volume_knob.x = pt.x - (volume_knob.w / 2);
-                    volume_knob.x = SDL_max(volume_knob.x, volume_rect.x);
-                    volume_knob.x = SDL_min(volume_knob.x, (volume_rect.x + volume_rect.w) - volume_knob.w);
+                if (SDL_PointInRect(&pt, &hcolor_rect) && (event.motion.state & SDL_BUTTON_LMASK))
+                { // mouse is pressed inside the "color" "slider"?
+                    const float fx = (float)(pt.x - color_rect.x);
+                    color_slider_value = (fx / ((float)color_rect.w)); // a value between 0.0f and 1.0f
+                    printf("SLIDING 1! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(color_slider_value * 100.0f));
+                    color_knob.x = pt.x - (color_knob.w / 2);
+                    color_knob.x = SDL_max(color_knob.x, color_rect.x);
+                    color_knob.x = SDL_min(color_knob.x, (color_rect.x + color_rect.w) - color_knob.w);
                 }
-                else if (SDL_PointInRect(&pt, &volume_rect2) && (event.motion.state & SDL_BUTTON_LMASK))
-                { // mouse is pressed inside the "volume" "slider"?
-                    const float fx = (float)(pt.x - volume_rect2.x);
-                    volume_slider_value2 = (fx / ((float)volume_rect2.w)); // a value between 0.0f and 1.0f
-                    printf("SLIDING 2 ! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(volume_slider_value2 * 100.0f));
-                    volume_knob2.x = pt.x - (volume_knob2.w / 2);
-                    volume_knob2.x = SDL_max(volume_knob2.x, volume_rect2.x);
-                    volume_knob2.x = SDL_min(volume_knob2.x, (volume_rect2.x + volume_rect2.w) - volume_knob2.w);
+                else if (SDL_PointInRect(&pt, &hcolor_rect2) && (event.motion.state & SDL_BUTTON_LMASK))
+                { // mouse is pressed inside the "color" "slider"?
+                    const float fx = (float)(pt.x - color_rect2.x);
+                    color_slider_value2 = (fx / ((float)color_rect2.w)); // a value between 0.0f and 1.0f
+                    printf("SLIDING 2 ! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(color_slider_value2 * 100.0f));
+                    color_knob2.x = pt.x - (color_knob2.w / 2);
+                    color_knob2.x = SDL_max(color_knob2.x, color_rect2.x);
+                    color_knob2.x = SDL_min(color_knob2.x, (color_rect2.x + color_rect2.w) - color_knob2.w);
                 }
-                else if (SDL_PointInRect(&pt, &volume_rect3) && (event.motion.state & SDL_BUTTON_LMASK))
-                { // mouse is pressed inside the "volume" "slider"?
-                    const float fx = (float)(pt.x - volume_rect3.x);
-                    volume_slider_value3 = (fx / ((float)volume_rect3.w)); // a value between 0.0f and 1.0f
-                    printf("SLIDING 3! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(volume_slider_value3 * 100.0f));
-                    volume_knob3.x = pt.x - (volume_knob3.w / 2);
-                    volume_knob3.x = SDL_max(volume_knob3.x, volume_rect3.x);
-                    volume_knob3.x = SDL_min(volume_knob3.x, (volume_rect3.x + volume_rect3.w) - volume_knob3.w);
+                else if (SDL_PointInRect(&pt, &hcolor_rect3) && (event.motion.state & SDL_BUTTON_LMASK))
+                { // mouse is pressed inside the "color" "slider"?
+                    const float fx = (float)(pt.x - color_rect3.x);
+                    color_slider_value3 = (fx / ((float)color_rect3.w)); // a value between 0.0f and 1.0f
+                    printf("SLIDING 3! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(color_slider_value3 * 100.0f));
+                    color_knob3.x = pt.x - (color_knob3.w / 2);
+                    color_knob3.x = SDL_max(color_knob3.x, color_rect3.x);
+                    color_knob3.x = SDL_min(color_knob3.x, (color_rect3.x + color_rect3.w) - color_knob3.w);
                 }
-                else if (SDL_PointInRect(&pt, &volume_rect4) && (event.motion.state & SDL_BUTTON_LMASK))
-                { // mouse is pressed inside the "volume" "slider"?
-                    const float fx = (float)(pt.x - volume_rect4.x);
-                    volume_slider_value4 = (fx / ((float)volume_rect4.w)); // a value between 0.0f and 1.0f
-                    printf("SLIDING 4! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(volume_slider_value4 * 100.0f));
-                    volume_knob4.x = pt.x - (volume_knob4.w / 2);
-                    volume_knob4.x = SDL_max(volume_knob4.x, volume_rect4.x);
-                    volume_knob4.x = SDL_min(volume_knob4.x, (volume_rect4.x + volume_rect4.w) - volume_knob4.w);
+                else if (SDL_PointInRect(&pt, &hcolor_rect4) && (event.motion.state & SDL_BUTTON_LMASK))
+                { // mouse is pressed inside the "color" "slider"?
+                    const float fx = (float)(pt.x - color_rect4.x);
+                    color_slider_value4 = (fx / ((float)color_rect4.w)); // a value between 0.0f and 1.0f
+                    printf("SLIDING 4! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(color_slider_value4 * 100.0f));
+                    color_knob4.x = pt.x - (color_knob4.w / 2);
+                    color_knob4.x = SDL_max(color_knob4.x, color_rect4.x);
+                    color_knob4.x = SDL_min(color_knob4.x, (color_rect4.x + color_rect4.w) - color_knob4.w);
                 }
                 print_bg();
-                print_volume();
+                print_color();
             }
         }
         if (fplay && !ended)
@@ -922,11 +924,28 @@ int main(int argc, char *argv[])
                 loadTableau(renderer);
                 printf("En attente du joueur %d...\n", *pj);
                 char cbuffer;
-                if (recv(sock, &cbuffer, sizeof(cbuffer), 0) != SOCKET_ERROR)
+                int ec;
+                ec = recv(sock, &cbuffer, sizeof(cbuffer), 0);
+                if (ec != SOCKET_ERROR)
                 {
                     int rnum = cbuffer - '0';
-                    InsertCoin(renderer, rnum);
-                    SDL_RenderClear(renderer);
+                    InsertCoin(renderer, rnum, replayfile);
+                    SDL_RenderPresent(renderer);
+                }
+                else if (ec == 0)
+                {
+                    printf("Connexion perdue.");
+                    closesocket(sock);
+                    SDL_Rect recter;
+                    recter.x = 400;
+                    recter.y = 50;
+                    printText(font, renderer, red_color, "La connexion a ete perdue.", &recter, black_color);
+                    SDL_Delay(2000);
+                    fplay = 0;
+                    fmenu = 1;
+                    j = 1;
+                    fclient = 0;
+                    fserver = 0;
                 }
             }
             else if (fserver && j == 2)
@@ -935,11 +954,28 @@ int main(int argc, char *argv[])
                 loadTableau(renderer);
                 printf("En attente du joueur %d...\n", *pj);
                 char buffer2;
-                if (recv(sock, &buffer2, sizeof(buffer2), 0) != SOCKET_ERROR)
+                int ec;
+                ec = recv(sock, &buffer2, sizeof(buffer2), 0);
+                if (ec != SOCKET_ERROR)
                 {
                     int rnum = buffer2 - '0';
-                    InsertCoin(renderer, rnum);
-                    SDL_RenderClear(renderer);
+                    InsertCoin(renderer, rnum, replayfile);
+                    SDL_RenderPresent(renderer);
+                }
+                else if (ec == 0)
+                {
+                    printf("Connexion perdue.");
+                    closesocket(sock);
+                    SDL_Rect recter;
+                    recter.x = 400;
+                    recter.y = 50;
+                    printText(font, renderer, red_color, "La connexion a ete perdue.", &recter, black_color);
+                    SDL_Delay(2000);
+                    fplay = 0;
+                    fmenu = 1;
+                    j = 1;
+                    fclient = 0;
+                    fserver = 0;
                 }
             }
         }
@@ -996,8 +1032,7 @@ Quit:
     TTF_Quit();
     SDL_Quit();
     Mix_FreeMusic(actmusic);
-    Mix_FreeChunk(sound);
     actmusic = NULL;
-    sound = NULL;
+    actsound = NULL;
     return statut;
 }

@@ -41,21 +41,25 @@ int colorG = 25;
 int colorB = 25;
 int colorA = 145;
 #define SECRET "Zach"
-const SDL_Rect volume_rect = {(640 - 500) / 2, 200, 500, 20};
-const SDL_Rect volume_rect2 = {(640 - 500) / 2, 300, 500, 20};
-const SDL_Rect volume_rect3 = {(640 - 500) / 2, 400, 500, 20};
-const SDL_Rect volume_rect4 = {(640 - 500) / 2, 500, 500, 20};
-SDL_Rect volume_knob;
-SDL_Rect volume_knob2;
-SDL_Rect volume_knob3;
-SDL_Rect volume_knob4;
-static float volume_slider_value = 1.0f;
-static float volume_slider_value2 = 1.0f;
-static float volume_slider_value3 = 1.0f;
-static float volume_slider_value4 = 1.0f;
-// TODO : Faire les vérifs du fichier de config;
+const SDL_Rect color_rect = {(640 - 500) / 2, 200, 500, 20};
+const SDL_Rect color_rect2 = {(640 - 500) / 2, 350, 500, 20};
+const SDL_Rect color_rect3 = {(640 - 500) / 2, 500, 500, 20};
+const SDL_Rect color_rect4 = {(640 - 500) / 2, 650, 500, 20};
+const SDL_Rect hcolor_rect = {(640 - 500) / 2, 180, 500, 60};
+const SDL_Rect hcolor_rect2 = {(640 - 500) / 2, 330, 500, 60};
+const SDL_Rect hcolor_rect3 = {(640 - 500) / 2, 480, 500, 60};
+const SDL_Rect hcolor_rect4 = {(640 - 500) / 2, 630, 500, 60};
+SDL_Rect color_knob;
+SDL_Rect color_knob2;
+SDL_Rect color_knob3;
+SDL_Rect color_knob4;
+static float color_slider_value = 1.0f;
+static float color_slider_value2 = 1.0f;
+static float color_slider_value3 = 1.0f;
+static float color_slider_value4 = 1.0f;
 // TODO : ajouter le replayer qui crée tout
-// TODO : Enlever les touches quand gagné (ajouter juste un "Appuyer sur Entrée pour continuer")
+// TODO : BAISSER LE SON DE CETTE PTN DE MUSIQUE (avec + et -)
+// TODO : Faire les vérifs du fichier de config;
 // TODO : Implémenter le multijoueur
 // TODO : ranger les fichiers dans des dossiers et cleaner tout
 // TODO : Handle les errors connes style (config mais pas de config dedans)
@@ -73,7 +77,14 @@ SDL_Color red_color = {255, 0, 0, 255};
 SDL_Color yellow_color = {255, 255, 0, 255};
 SDL_Color white_color = {255, 255, 255, 255};
 Mix_Music *actmusic;
-Mix_Chunk *sound;
+Mix_Chunk *sound1;
+Mix_Chunk *sound2;
+Mix_Chunk *sound3;
+Mix_Chunk *sound4;
+Mix_Chunk *error;
+Mix_Chunk *win;
+Mix_Chunk *lose;
+Mix_Chunk *actsound;
 
 SOCKET sock;
 
@@ -90,23 +101,22 @@ char **settingsmenu[4];
 char **playmenu[4];
 char path[50];
 char buffer;
-FILE* replayfile;
-
+FILE *replayfile;
 
 char *play = "Play";
-char *multiplayer = "Watch a replay";
-char *settings = "Settings";
-char *quit = "Quit";
+char *replay = "Regarder une rediffusion";
+char *settings = "Paramètres";
+char *quit = "Quitter";
 char *host = "Héberger la connexion";
 char *client = "Se connecter à un serveur";
 char *local = "Jouer à deux en local";
 char *music = "Changer de musique";
 char *retour = "Retour";
-char *rtm = "Return to Menu";
-char *mscolor = "Modify Screen Color";
-char *mpseudo = "Modify Pseudo";
-char *loop = "(L)oop music";
-char *autoo = "(A)uto play";
+char *rtm = "Retour au Menu";
+char *mscolor = "Modifier la couleur de l'écran";
+char *mpseudo = "Modifier le pseudo";
+char *loop = "(L)oop la musique";
+char *autoo = "Lecture (A)utomatique";
 
 char *echtoex = "Appuyez sur Echap pour quitter";
 
@@ -214,8 +224,12 @@ void print_bg()
     }
     else
     {
-        SDL_SetRenderDrawColor(renderer, colorR, colorG, colorB, colorA);
-        SDL_RenderFillRect(renderer, NULL);
+        if(SDL_SetRenderDrawColor(renderer, colorR, colorG, colorB, colorA)<0){
+            printf("Erreur SDL_SetRenderDrawColor : %s", SDL_GetError());
+        };
+        if(SDL_RenderFillRect(renderer, NULL)<0){
+            printf("Erreur SDL_RenderFillRect : %s", SDL_GetError());
+        };
     }
 }
 
@@ -279,12 +293,12 @@ void printText(TTF_Font *font, SDL_Renderer *renderer, SDL_Color color, char *te
 {
     SDL_Surface *text, *bgtext;
 
-    bgtext = TTF_RenderText_Solid(font, texte, bgcolor);
+    bgtext = TTF_RenderUTF8_Blended(font, texte, bgcolor);
     if (!bgtext)
     {
         printf("Failed to render bgtext: %s\n", TTF_GetError());
     }
-    text = TTF_RenderText_Solid(font, texte, color);
+    text = TTF_RenderUTF8_Blended(font, texte, color);
     if (!text)
     {
         printf("Failed to render text: %s\n", TTF_GetError());
@@ -454,7 +468,16 @@ void print_ip_renderer(TTF_Font *font, SDL_Renderer *renderer, char *texte)
     printText(font, renderer, white_color, texte, &rects[1], black_color);
     SDL_RenderPresent(renderer);
 }
+void loadSounds(){
+    sound1 = Mix_LoadWAV("music/n/coin1.wav");
+    sound2 = Mix_LoadWAV("music/n/coin2.wav");
+    sound3 = Mix_LoadWAV("music/n/coin3.wav");
+    sound4 = Mix_LoadWAV("music/n/coin4.wav");
+    error = Mix_LoadWAV("music/n/error.wav");
+    win = Mix_LoadWAV("music/n/muscong.wav");
+    lose = Mix_LoadWAV("music/n/lose.wav");
 
+}
 void get_user_vars(TTF_Font *font, SDL_Renderer *renderer)
 {
     SDL_Rect rect;
@@ -477,6 +500,7 @@ void get_user_vars(TTF_Font *font, SDL_Renderer *renderer)
             char *ps = strtok(p, n);
             strcpy(texte, "Bonjour, ");
             strcat(texte, ps);
+            strcat(texte, " !");
         }
         else if (strcmp(p, "Music") == 0)
         {
@@ -500,8 +524,32 @@ void get_user_vars(TTF_Font *font, SDL_Renderer *renderer)
             char *ps = strtok(p, n);
             fmute = atoi(ps);
         }
+        else if (strcmp(p, "Red") == 0)
+        {
+            p = strtok(NULL, d);
+            char *ps = strtok(p, n);
+            colorR = atoi(ps);
+        }
+        else if (strcmp(p, "Green") == 0)
+        {
+            p = strtok(NULL, d);
+            char *ps = strtok(p, n);
+            colorG = atoi(ps);
+        }
+        else if (strcmp(p, "Blue") == 0)
+        {
+            p = strtok(NULL, d);
+            char *ps = strtok(p, n);
+            colorB = atoi(ps);
+        }
+        else if (strcmp(p, "Alpha") == 0)
+        {
+            p = strtok(NULL, d);
+            char *ps = strtok(p, n);
+            colorA = atoi(ps);
+        }
     }
-    printText(font, renderer, yellow_color, texte, &rect, black_color);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Bienvenue !", texte, window);
 
     SDL_RenderPresent(renderer);
 }
@@ -562,6 +610,7 @@ int SDL_RenderFillCircle(SDL_Renderer *renderer, int x, int y, int radius)
 
 int printChooseArrow(SDL_Renderer *renderer, int num)
 {
+    printf("Loadmisms\n");
     SDL_Surface *image = IMG_Load("arrow.png");
     SDL_Texture *img_texture = NULL;
     if (!image)
@@ -572,7 +621,6 @@ int printChooseArrow(SDL_Renderer *renderer, int num)
     SDL_Rect rect = {num * 50, 6 * 50, 50, 50};
     SDL_RenderCopy(renderer, img_texture, NULL, &rect);
     SDL_Delay(50);
-    print_turn();
     SDL_RenderPresent(renderer);
 }
 
@@ -670,7 +718,7 @@ int createTableau(SDL_Renderer *renderer)
     SDL_RenderPresent(renderer);
 }
 
-int InsertCoin(SDL_Renderer *renderer, int num)
+int InsertCoin(SDL_Renderer *renderer, int num, FILE *replayfile)
 {
     if (*pj == 1)
     {
@@ -698,8 +746,11 @@ int InsertCoin(SDL_Renderer *renderer, int num)
             break;
         }
     }
+    if (replayfile != NULL)
+    {
+        fprintf(replayfile, "%d %d\n", j, num + 1);
+    }
     verifywin(pj);
-
     (*pj == 1) ? (*pj = 2) : (*pj = 1);
     print_turn();
 }
@@ -721,6 +772,7 @@ void print_turn()
         strcat(turn, n);
         strcat(turn, a);
         printText(lfont, renderer, white_color, turn, &re, black_color);
+        printChooseArrow(renderer, nuc);
         SDL_Rect re2;
         re.x = 400;
         re.y = 120;
@@ -735,7 +787,7 @@ void turnsreplay(char *p)
 {
     int colonne = p[0] - '0';
     printf("\n");
-    InsertCoin(renderer, colonne - 1);
+    InsertCoin(renderer, colonne - 1, NULL);
 }
 
 void createtab()
@@ -1139,30 +1191,10 @@ int printmusicfiles(TTF_Font *font, SDL_Renderer *renderer, int num)
     SDL_Rect rects[cpt];
     for (int j = 0; j < cpt; j++)
     {
-        if (cpt <= 10)
-        {
-            rects[j].x = width / 2;
-            rects[j].y = height / cpt * (j + 1);
-            rects[j].h = 100;
-            rects[j].w = 100;
-        }
-        else
-        {
-            if (j < 10)
-            {
-                rects[j].x = width / 4 - 50;
-                rects[j].y = height / cpt * (j + 1) + 20;
-                rects[j].h = 100;
-                rects[j].w = 100;
-            }
-            else
-            {
-                rects[j].x = width / 4 * 3 - 50;
-                rects[j].y = height / (cpt % 10) * (j % 10 + 1);
-                rects[j].h = 100;
-                rects[j].w = 100;
-            }
-        }
+        rects[j].x = width / 3;
+        rects[j].y = height / cpt * (j + 1);
+        rects[j].h = 100;
+        rects[j].w = 100;
     }
     d = opendir(".");
     if (d)
@@ -1208,12 +1240,12 @@ void print_music_title()
     rects.h = 100;
     printText(font, renderer, white_color, "Choisissez une musique à lancer.", &rects, black_color);
     SDL_Rect rect;
-    rect.x = 800;
+    rect.x = 600;
     rect.y = 120;
     rect.w = 100;
     rect.h = 100;
     SDL_Rect rect2;
-    rect2.x = 800;
+    rect2.x = 600;
     rect2.y = 200;
     rect2.w = 100;
     rect2.h = 100;
@@ -1599,23 +1631,39 @@ int convertvalue(int v)
     return v * 255 / 100;
 }
 
-void print_volume()
+void print_color()
 {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderFillRect(renderer, &volume_rect);
-    SDL_RenderFillRect(renderer, &volume_rect2);
-    SDL_RenderFillRect(renderer, &volume_rect3);
-    SDL_RenderFillRect(renderer, &volume_rect);
+    SDL_RenderFillRect(renderer, &color_rect);
+    SDL_RenderFillRect(renderer, &color_rect2);
+    SDL_RenderFillRect(renderer, &color_rect3);
+    SDL_RenderFillRect(renderer, &color_rect4);
+    SDL_Rect rectt;
+    SDL_Rect rectt2;
+    SDL_Rect rectt3;
+    SDL_Rect rectt4;
+    rectt.x = color_rect.x + 520;
+    rectt2.x = color_rect2.x + 520;
+    rectt3.x = color_rect3.x + 520;
+    rectt4.x = color_rect4.x + 520;
+    rectt.y = color_rect.y;
+    rectt2.y = color_rect2.y;
+    rectt3.y = color_rect3.y;
+    rectt4.y = color_rect4.y;
+    printText(font, renderer, black_color, "Rouge", &rectt, white_color);
+    printText(font, renderer, black_color, "Vert", &rectt2, white_color);
+    printText(font, renderer, black_color, "Bleu", &rectt3, white_color);
+    printText(font, renderer, black_color, "Alpha", &rectt4, white_color);
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-    SDL_RenderFillRect(renderer, &volume_knob);
-    SDL_RenderFillRect(renderer, &volume_knob2);
-    SDL_RenderFillRect(renderer, &volume_knob3);
-    SDL_RenderFillRect(renderer, &volume_knob4);
+    SDL_RenderFillCircle(renderer, color_knob.x, color_knob.y + 10, 25);
+    SDL_RenderFillCircle(renderer, color_knob2.x, color_knob2.y + 10, 25);
+    SDL_RenderFillCircle(renderer, color_knob3.x, color_knob3.y + 10, 25);
+    SDL_RenderFillCircle(renderer, color_knob4.x, color_knob4.y + 10, 25);
     SDL_RenderPresent(renderer);
-    colorR = convertvalue((int)SDL_round(volume_slider_value * 100.0f));
-    colorG = convertvalue((int)SDL_round(volume_slider_value2 * 100.0f));
-    colorB = convertvalue((int)SDL_round(volume_slider_value3 * 100.0f));
-    colorA = convertvalue((int)SDL_round(volume_slider_value4 * 100.0f));
+    colorR = convertvalue((int)SDL_round(color_slider_value * 100.0f));
+    colorG = convertvalue((int)SDL_round(color_slider_value2 * 100.0f));
+    colorB = convertvalue((int)SDL_round(color_slider_value3 * 100.0f));
+    colorA = convertvalue((int)SDL_round(color_slider_value4 * 100.0f));
 }
 void createfile()
 {
@@ -1626,30 +1674,61 @@ void createfile()
     fclose(fptr);
 }
 
-long int findSize(char file_name[]) 
-{ 
-	// opening the file in read mode 
-	FILE* fp = fopen(file_name, "r"); 
+long int findSize(char file_name[])
+{
+    // opening the file in read mode
+    FILE *fp = fopen(file_name, "r");
 
-	// checking if the file exist or not 
-	if (fp == NULL) { 
-		printf("File Not Found!\n"); 
-		return -1; 
-	} 
+    // checking if the file exist or not
+    if (fp == NULL)
+    {
+        printf("File Not Found!\n");
+        return -1;
+    }
 
-	fseek(fp, 0L, SEEK_END); 
+    fseek(fp, 0L, SEEK_END);
 
-	// calculating the size of the file 
-	long int res = ftell(fp); 
-	// closing the file 
-	fclose(fp); 
+    // calculating the size of the file
+    long int res = ftell(fp);
+    // closing the file
+    fclose(fp);
 
-	return res; 
+    return res;
 }
 
-FILE createReplay(){
-    FILE *fptr;
+void createReplay()
+{
     printf("Writing file\n");
-    fptr = fopen("replays/replay.txt", "w");
-    return *fptr;
+    replayfile = fopen("replays/replay.txt", "w");
+    // magouille pour créer un new file
+}
+
+void closereplay()
+{
+    fclose(replayfile);
+}
+
+Mix_Chunk *chooseRandSound()
+{
+    printf("chooseRandSound\n");
+    int randnum = rand() % 4;
+    printf("randnum = %d\n", randnum);
+    switch (randnum)
+    {
+    case 0:
+        return sound1;
+        break;
+    case 1:
+        return sound2;
+        break;
+    case 2:
+        return sound3;
+        break;
+    case 3:
+        return sound4;
+        break;
+    default:
+        return sound1;
+        break;
+    }
 }
