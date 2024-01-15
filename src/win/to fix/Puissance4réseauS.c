@@ -67,7 +67,7 @@ int tryconnect(int erreur){
         if(sock != INVALID_SOCKET) {
             printf("La socket %d est maintenant ouverte en mode TCP/IP\n", sock);
             /* Configuration */
-            sin.sin_addr.s_addr    = htonl(INADDR_ANY);   /* Adresse IP automatique */
+            sin.sin_addr.s_addr    = htonl(INADDR_ANY);   /* Adresse IP automatique */ //TODO Pouvoir choisir l'adresse IP (publique ou privée), ou utiliser par défaut  son adresse IP locale  
             sin.sin_family         = AF_INET;             /* Protocole familial (IP) */
             sin.sin_port           = htons(PORT);         /* Listage du port */
             sock_err = bind(sock, (SOCKADDR*)&sin, sizeof(sin));
