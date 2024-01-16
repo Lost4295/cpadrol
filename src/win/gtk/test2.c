@@ -1,4 +1,4 @@
-#include <gtk/gtk.h>
+#include <gtk4/gtk.h>
 
 /* The provider below provides application wide CSS data. */
 GtkCssProvider *provider;

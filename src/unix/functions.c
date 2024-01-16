@@ -58,11 +58,11 @@ static float color_slider_value2 = 1.0f;
 static float color_slider_value3 = 1.0f;
 static float color_slider_value4 = 1.0f;
 // TODO : ajouter le replayer qui crée tout
-// TODO : BAISSER LE SON DE CETTE PTN DE MUSIQUE (avec + et -)
-// TODO : Faire les vérifs du fichier de config;
 // TODO : Implémenter le multijoueur
-// TODO : ranger les fichiers dans des dossiers et cleaner tout
+
+// TODO : Faire les vérifs du fichier de config;
 // TODO : Handle les errors connes style (config mais pas de config dedans)
+// TODO : ranger les fichiers dans des dossiers et cleaner tout
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
@@ -72,6 +72,7 @@ TTF_Font *font, *tfont, *lfont, *bgfont;
 SDL_Rect rect = {100, 100, 100, 100}, dst = {0, 0, 0, 0}, recte = {100, 140, 100, 100}, rectt = {100, 200, 100, 100};
 SDL_Rect title = {350, 15, 100, 100};
 SDL_Rect authors = {0, 400, 100, 100};
+SDL_Rect fin = {0, 450, 100, 100};
 SDL_Color black_color = {0, 0, 0, 255};
 SDL_Color red_color = {255, 0, 0, 255};
 SDL_Color yellow_color = {255, 255, 0, 255};
@@ -88,9 +89,10 @@ Mix_Chunk *actsound;
 
 SOCKET sock;
 
-int terr = 0;
+int sendErrNum = 0;
 char inputText[50];
 char ip[50];
+char *player1ps;
 int num = 0, nus = 0, nup = 0, nuc = 0, nur = 0, numm = 1;
 int flocal = 0, fserver = 0, fclient = 0;
 int fmplay = 0, fmreplay = 0, fccolor = 0, fsettings = 0, fmenu = 0, fplay = 0, fconfig = 1, freplay = 0, fauto = -1, fchmusic = 0, fmauto = 0, floop = 1, fmute = 0;
@@ -98,7 +100,7 @@ int ended = 0, secret = 0;
 int maxfiles = 0;
 char **menu[4];
 char **settingsmenu[4];
-char **playmenu[4];
+char **playmenu[5];
 char path[50];
 char buffer;
 FILE *replayfile;
@@ -109,6 +111,7 @@ char *settings = "Paramètres";
 char *quit = "Quitter";
 char *host = "Héberger la connexion";
 char *client = "Se connecter à un serveur";
+char *lookup= "Chercher un serveur";
 char *local = "Jouer à deux en local";
 char *music = "Changer de musique";
 char *retour = "Retour";
@@ -133,6 +136,7 @@ int width = 1060, height = 880;
 int tableau[6][7];
 int j = 1;
 int *pj = &j;
+Mix_Chunk *chooseRandSound();
 
 void append(char *s, char c)
 {
@@ -224,10 +228,12 @@ void print_bg()
     }
     else
     {
-        if(SDL_SetRenderDrawColor(renderer, colorR, colorG, colorB, colorA)<0){
+        if (SDL_SetRenderDrawColor(renderer, colorR, colorG, colorB, colorA) < 0)
+        {
             printf("Erreur SDL_SetRenderDrawColor : %s", SDL_GetError());
         };
-        if(SDL_RenderFillRect(renderer, NULL)<0){
+        if (SDL_RenderFillRect(renderer, NULL) < 0)
+        {
             printf("Erreur SDL_RenderFillRect : %s", SDL_GetError());
         };
     }
@@ -240,11 +246,12 @@ int init(SDL_Window **window, SDL_Renderer **renderer, int w, int h)
         fprintf(stderr, "Erreur SDL_Init : %s", SDL_GetError());
         return -1;
     }
-    if (0 != SDL_CreateWindowAndRenderer(w, h, SDL_WINDOW_SHOWN, window, renderer))
+    if (0 != SDL_CreateWindowAndRenderer(w, h, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE, window, renderer))
     {
         fprintf(stderr, "Erreur SDL_CreateWindowAndRenderer : %s", SDL_GetError());
         return -1;
     }
+    SDL_SetWindowResizable(*window, SDL_TRUE);
     if (TTF_Init() < 0)
     {
         fprintf(stderr, "Erreur TTF_Init : %s", TTF_GetError());
@@ -255,6 +262,32 @@ int init(SDL_Window **window, SDL_Renderer **renderer, int w, int h)
         fprintf(stderr, "Erreur IMG_Init : %s", IMG_GetError());
         return -1;
     }
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) < 0)
+    {
+        printf("Error initializing SDL_mixer: %s\n", Mix_GetError());
+        return false;
+    }
+    font = TTF_OpenFont("Roboto.ttf", 32);
+    lfont = TTF_OpenFont("Roboto.ttf", 18);
+    tfont = TTF_OpenFont("Roboto.ttf", 50);
+    if (!font || !lfont || !tfont)
+    {
+        printf("Error loading bgfont: %s\n", TTF_GetError());
+        return -1;
+    }
+    SDL_Surface *image = IMG_Load("p.jpg");
+    SDL_Texture *img_texture = NULL;
+    if (!image)
+    {
+        printf("Erreur de chargement de l'image : %s", SDL_GetError());
+        return -1;
+    }
+
+    img_texture = SDL_CreateTextureFromSurface(*renderer, image);
+    SDL_RenderCopy(*renderer, img_texture, NULL, NULL);
+    print_main_title();
+    printText(lfont, renderer, black_color, "Realisé par Mathis Vareilles, Ylan Turin--Kondi et Zacharie Roger", &authors, white_color);
+    SDL_RenderPresent(*renderer);
     return 0;
 }
 
@@ -361,25 +394,29 @@ void print_menu_opts(TTF_Font *font, SDL_Renderer *renderer, int num)
 void print_play_opts(TTF_Font *font, SDL_Renderer *renderer, int num)
 {
     print_bg();
-    SDL_Rect rects[4];
+    SDL_Rect rects[5];
     rects[0].x = 50;
     rects[1].x = 50;
     rects[2].x = 50;
     rects[3].x = 50;
+    rects[4].x = 50;
     rects[0].y = 140;
     rects[1].y = 220;
     rects[2].y = 300;
     rects[3].y = 380;
+    rects[4].y = 460;
     rects[0].w = 100;
     rects[1].w = 100;
     rects[2].w = 100;
     rects[3].w = 100;
+    rects[4].w = 100;
     rects[0].h = 100;
     rects[1].h = 100;
     rects[2].h = 100;
     rects[3].h = 100;
+    rects[4].h = 100;
 
-    for (int i = 0; i <= 3; i++)
+    for (int i = 0; i <= 4; i++)
     {
         if (num == i)
         {
@@ -468,7 +505,8 @@ void print_ip_renderer(TTF_Font *font, SDL_Renderer *renderer, char *texte)
     printText(font, renderer, white_color, texte, &rects[1], black_color);
     SDL_RenderPresent(renderer);
 }
-void loadSounds(){
+void loadSounds()
+{
     sound1 = Mix_LoadWAV("music/n/coin1.wav");
     sound2 = Mix_LoadWAV("music/n/coin2.wav");
     sound3 = Mix_LoadWAV("music/n/coin3.wav");
@@ -476,7 +514,10 @@ void loadSounds(){
     error = Mix_LoadWAV("music/n/error.wav");
     win = Mix_LoadWAV("music/n/muscong.wav");
     lose = Mix_LoadWAV("music/n/lose.wav");
-
+    if (!sound1 || !sound2 || !sound3 || !sound4 || !error || !win || !lose)
+    {
+        printf("Error loading sounds: %s\n", Mix_GetError());
+    }
 }
 void get_user_vars(TTF_Font *font, SDL_Renderer *renderer)
 {
@@ -497,9 +538,9 @@ void get_user_vars(TTF_Font *font, SDL_Renderer *renderer)
         if (strcmp(p, "Pseudo") == 0)
         {
             p = strtok(NULL, d);
-            char *ps = strtok(p, n);
+            player1ps = strtok(p, n);
             strcpy(texte, "Bonjour, ");
-            strcat(texte, ps);
+            strcat(texte, player1ps);
             strcat(texte, " !");
         }
         else if (strcmp(p, "Music") == 0)
@@ -610,7 +651,6 @@ int SDL_RenderFillCircle(SDL_Renderer *renderer, int x, int y, int radius)
 
 int printChooseArrow(SDL_Renderer *renderer, int num)
 {
-    printf("Loadmisms\n");
     SDL_Surface *image = IMG_Load("arrow.png");
     SDL_Texture *img_texture = NULL;
     if (!image)
@@ -620,7 +660,6 @@ int printChooseArrow(SDL_Renderer *renderer, int num)
     img_texture = SDL_CreateTextureFromSurface(renderer, image);
     SDL_Rect rect = {num * 50, 6 * 50, 50, 50};
     SDL_RenderCopy(renderer, img_texture, NULL, &rect);
-    SDL_Delay(50);
     SDL_RenderPresent(renderer);
 }
 
@@ -714,7 +753,7 @@ int createTableau(SDL_Renderer *renderer)
             SDL_RenderFillCircle(renderer, j * 50 + 25, i * 50 + 25, 20);
         }
     }
-    SDL_Delay(50);
+    SDL_Delay(10);
     SDL_RenderPresent(renderer);
 }
 
@@ -734,6 +773,10 @@ int InsertCoin(SDL_Renderer *renderer, int num, FILE *replayfile)
         recter.x = 400;
         recter.y = 50;
         printText(font, renderer, red_color, "Colonne pleine !", &recter, black_color);
+        if (!fmute)
+        {
+            Mix_PlayChannel(-1, error, 0);
+        }
         return;
     }
     int i;
@@ -742,6 +785,11 @@ int InsertCoin(SDL_Renderer *renderer, int num, FILE *replayfile)
         if (tableau[i][num] == 0)
         {
             tableau[i][num] = *pj;
+            if (!fmute)
+            {
+                actsound = chooseRandSound();
+                Mix_PlayChannel(-1, actsound, 0);
+            }
             SDL_RenderFillCircle(renderer, num * 50 + 25, i * 50 + 25, 20);
             break;
         }
@@ -872,7 +920,7 @@ int loadTableau(SDL_Renderer *renderer)
     SDL_SetRenderDrawColor(renderer, 147, 172, 234, 145);
     SDL_RenderFillRect(renderer, NULL);
     createTableau(renderer);
-    SDL_Delay(50);
+    SDL_Delay(10);
 
     for (int i = 0; i < 6; i++)
     {
@@ -894,7 +942,7 @@ int loadTableau(SDL_Renderer *renderer)
         }
     }
 
-    SDL_Delay(50);
+    SDL_Delay(10);
     SDL_RenderPresent(renderer);
 }
 
@@ -1021,9 +1069,12 @@ void checkdiag(int *joueur)
 void endgame(int *wjoueur, int result)
 {
     printtab();
+    loadTableau(renderer);
+    SDL_Delay(100);
     if (result == 0)
     {
         char *egal = "Aucun joueur n'a réussi a aligner 4 pions. C'est une égalité !";
+        Mix_PlayChannel(-1, lose, 0);
         printText(font, renderer, white_color, egal, &authors, black_color);
         printf("%s\n", egal);
     }
@@ -1040,6 +1091,17 @@ void endgame(int *wjoueur, int result)
         strcat(wj, a);
         printText(font, renderer, white_color, wj, &authors, black_color);
         printf("%d a gagne !\n", *wjoueur);
+        Mix_PlayChannel(-1, win, 0);
+    }
+    if (fserver && j == 1 || fclient && j == 2)
+    {
+        Mix_PlayChannel(-1, win, 0);
+        printText(font, renderer, white_color, "Félicitations !", &fin, black_color);
+    }
+    else if (fserver && j == 2 || fclient && j == 1)
+    {
+        Mix_PlayChannel(-1, lose, 0);
+        printText(font, renderer, white_color, "Dommage !", &fin, black_color);
     }
     int *pended = &ended;
     *pended = 1;
@@ -1365,14 +1427,16 @@ void getfile(int num)
             {
                 if (i == num)
                 {
-                    chdir("replays");
-                    f = fopen(dir->d_name, "r");
+                    char filename[100];
+                    strcpy(filename, "replays/");
+                    strcat(filename, dir->d_name);
+                    f = fopen(filename, "r");
                     if (f == NULL)
                     {
-                        printf("Failed to open the file.\n");
+                        printf("Failed to open the file.\nTried to open : %s\n", filename);
                         return 1;
                     }
-                    printf("File opened successfully.\n");
+                    printf("File %s opened successfully.\n", dir->d_name);
                     char line[250];
                     int lcount = 1;
                     while (fgets(line, sizeof(line), f) != NULL)
@@ -1453,7 +1517,6 @@ void getfile(int num)
                         SDL_RenderPresent(renderer);
                     }
                     fclose(f);
-                    chdir("../");
                 }
                 i++;
             }
@@ -1551,7 +1614,7 @@ SOCKET tryconnects()
     /* Si la socket est valide */
     if (sock == INVALID_SOCKET)
     {
-        printf("Erreur de creation de la socket client\n");
+        printf("Erreur de creation de la socket serveur\n");
         return EXIT_FAILURE;
     }
     printf("La socket %d est maintenant ouverte en mode TCP/IP\n", sock);
@@ -1588,7 +1651,6 @@ SOCKET tryconnects()
     printf("Un client se connecte avec la socket %d de %s:%d\n", csock, inet_ntoa(csin.sin_addr), htons(csin.sin_port));
     sleep(1);
     createtab();
-    system("cls");
     printtab();
     return csock;
 }
@@ -1665,7 +1727,7 @@ void print_color()
     colorB = convertvalue((int)SDL_round(color_slider_value3 * 100.0f));
     colorA = convertvalue((int)SDL_round(color_slider_value4 * 100.0f));
 }
-void createfile()
+void createConfFile()
 {
     FILE *fptr;
     printf("Writing file\n");
@@ -1701,6 +1763,34 @@ void createReplay()
     printf("Writing file\n");
     replayfile = fopen("replays/replay.txt", "w");
     // magouille pour créer un new file
+    if (flocal)
+    {
+        fprintf(replayfile, "Joueur 1 -Joueur 2\n");
+    }
+    else
+    {
+        printf("so : %s\n", player1ps);
+        char player2ps[100];
+        if (fserver)
+        {
+            if (send(sock, player1ps, sizeof(player1ps), 0) != SOCKET_ERROR)
+            {
+                printf("Sent : %s\n", player1ps);
+                recv(sock, player2ps, sizeof(player2ps), 0);
+                printf("Received : %s\n", player2ps);
+            }
+        }
+        else
+        {
+            if (recv(sock, player2ps, sizeof(player2ps), 0) != SOCKET_ERROR)
+            {
+                printf("Received : %s\n", player2ps);
+                send(sock, player1ps, sizeof(player1ps), 0);
+                printf("Sent : %s\n", player1ps);
+            }
+        }
+        fprintf(replayfile, "%s -%s\n", player1ps, player2ps);
+    }
 }
 
 void closereplay()
@@ -1731,4 +1821,62 @@ Mix_Chunk *chooseRandSound()
         return sound1;
         break;
     }
+}
+
+void reprint(SDL_Renderer *renderer)
+{
+    if (flocal)
+    {
+        loadTableau(renderer);
+        print_turn();
+    }
+    else if (fserver)
+    {
+        loadTableau(renderer);
+        print_turn();
+    }
+    else if (fclient)
+    {
+        loadTableau(renderer);
+        print_turn();
+    }
+    else if (fmplay)
+    {
+        print_play_opts(font, renderer, nup);
+    }
+    else if (fmreplay)
+    {
+    }
+    else if (fccolor)
+    {
+    }
+    else if (fsettings)
+    {
+        print_settings_opts(font, renderer, nus);
+    }
+    else if (fmenu)
+    {
+        print_menu_opts(font, renderer, num);
+    }
+    else if (fplay)
+    {
+        loadTableau(renderer);
+        print_turn();
+    }
+    else if (fconfig)
+    {
+    }
+    else if (freplay)
+    {
+    }
+    else if (fchmusic)
+    {
+    }
+    else if (ended)
+    {
+    }
+    else if (secret)
+    {
+    }
+    SDL_RenderPresent(renderer);
 }

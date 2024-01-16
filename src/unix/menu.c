@@ -46,7 +46,7 @@ SOCKET tryconnects();
 void closesock(SOCKET sock);
 int replacer(int line, char *value);
 int convertvalue(int v);
-void createfile();
+void createConfFile();
 
 int main(int argc, char *argv[])
 {
@@ -55,11 +55,13 @@ int main(int argc, char *argv[])
         printf("You found the secret !\n");
         printf("You can now play with the secret music !\n");
         secret = 1;
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Secret", "You found the secret !\nYou can now play with the secret music !", NULL);
     }
     else
     {
         printf("You didn't find the secret :(\n");
         printf("You can't play with the secret music :(\n");
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Secret", "You didn't find the secret :(\nYou can't play with the secret music :(", NULL);
         secret = 0;
     }
     menu[0] = &play;
@@ -75,7 +77,8 @@ int main(int argc, char *argv[])
     playmenu[0] = &host;
     playmenu[1] = &client;
     playmenu[2] = &local;
-    playmenu[3] = &retour;
+    playmenu[3] = &lookup;
+    playmenu[4] = &retour;
 
     color_knob.y = color_rect.y;
     color_knob.h = color_rect.h;
@@ -100,33 +103,9 @@ int main(int argc, char *argv[])
     {
         goto Quit;
     }
-    font = TTF_OpenFont("Roboto.ttf", 32);
-    lfont = TTF_OpenFont("Roboto.ttf", 18);
-    tfont = TTF_OpenFont("Roboto.ttf", 50);
-    if (!font || !lfont || !tfont)
-    {
-        printf("Error loading bgfont: %s\n", TTF_GetError());
-        return -1;
-    }
-    SDL_Surface *image = IMG_Load("p.jpg");
-    SDL_Texture *img_texture = NULL;
-    if (!image)
-    {
-        printf("Erreur de chargement de l'image : %s", SDL_GetError());
-        return -1;
-    }
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) < 0)
-    {
-        printf("Error initializing SDL_mixer: %s\n", Mix_GetError());
-        return false;
-    }
-
-    img_texture = SDL_CreateTextureFromSurface(renderer, image);
-    SDL_RenderCopy(renderer, img_texture, NULL, NULL);
-    print_main_title();
-    printText(lfont, renderer, black_color, "Realisé par Mathis Vareilles, Ylan Turin--Kondi et Zacharie Roger", &authors, white_color);
-    SDL_RenderPresent(renderer);
     SDL_Delay(1000);
+    SDL_SetWindowMaximumSize(window, 1920, 1080);
+    SDL_SetWindowMinimumSize(window, 800, 600);
     DIR *test = opendir("replays");
     long int res = findSize("config.txt");
     // TODO :check si tous les dossiers sont là et sinon les créer
@@ -193,24 +172,32 @@ int main(int argc, char *argv[])
                 printf("Error while checking if directory exists.\n");
             }
         }
-        createfile();
+        createConfFile();
         SDL_StartTextInput();
         setWindowColor(renderer, black_color);
         print_pseudo_maker(font, renderer, " ");
     }
     SDL_Event event;
     SDL_bool quit = SDL_FALSE;
+    SDL_bool resized = SDL_FALSE;
     while (!quit)
     {
         SDL_bool renderText = SDL_FALSE;
         SDL_PollEvent(&event);
         if (event.type == SDL_QUIT)
             quit = SDL_TRUE;
-        else if (event.type == SDL_TEXTINPUT && (fconfig || fclient))
+        else if (event.type == SDL_TEXTINPUT)
         {
-            // Append character
-            append(inputText, *event.text.text);
-            renderText = SDL_TRUE;
+            if (fconfig)
+            {
+                append(inputText, *event.text.text);
+                renderText = SDL_TRUE;
+            }
+            if (fclient && strlen(inputText) < 15 && (*event.text.text == '.' || *event.text.text == '0' || *event.text.text == '1' || *event.text.text == '2' || *event.text.text == '3' || *event.text.text == '4' || *event.text.text == '5' || *event.text.text == '6' || *event.text.text == '7' || *event.text.text == '8' || *event.text.text == '9'))
+            {
+                append(inputText, *event.text.text);
+                renderText = SDL_TRUE;
+            }
         }
         else if (event.type == SDL_KEYDOWN)
         {
@@ -282,7 +269,7 @@ int main(int argc, char *argv[])
                     break;
                 case SDLK_LEFT:
                     printf("sym left\n");
-                    if (fplay && flocal)
+                    if (fplay && flocal && !ended)
                     {
                         (nuc == 0) ? nuc = 6 : nuc--;
                         printf("sym left : nuc = %d\n", nuc);
@@ -309,7 +296,7 @@ int main(int argc, char *argv[])
                     break;
                 case SDLK_RIGHT:
                     printf("sym right\n");
-                    if (fplay && flocal)
+                    if (fplay && flocal && !ended)
                     {
                         (nuc == 6) ? nuc = 0 : nuc++;
                         printf("sym right : nuc = %d\n", nuc);
@@ -454,13 +441,6 @@ int main(int argc, char *argv[])
                         fmenu = 1;
                         flocal = 0;
                         nuc = 0;
-                        Mix_FreeChunk(sound1);
-                        Mix_FreeChunk(sound2);
-                        Mix_FreeChunk(sound3);
-                        Mix_FreeChunk(sound4);
-                        Mix_FreeChunk(error);
-                        Mix_FreeChunk(win);
-                        Mix_FreeChunk(actsound);
                         print_menu_opts(font, renderer, num);
                     }
                     break;
@@ -645,11 +625,11 @@ int main(int argc, char *argv[])
                             fplay = 1;
                             SDL_RenderClear(renderer);
                             createtab();
+                            createReplay();
                             createTableau(renderer);
                             loadTableau(renderer);
                             break;
                         case 1:
-                            // TODO Remplir ici
                             SDL_StartTextInput();
                             fmplay = 0;
                             fclient = 1;
@@ -662,15 +642,20 @@ int main(int argc, char *argv[])
                             SDL_RenderPresent(renderer);
                             SDL_Delay(500);
                             loadSounds();
-                            createReplay();
-                            createTableau(renderer);
-                            print_turn();
                             fmplay = 0;
                             nup = 0;
                             fplay = 1;
                             flocal = 1;
+                            createReplay();
+                            createTableau(renderer);
+                            print_turn();
                             break;
                         case 3:
+                            fmplay = 0;
+                            fclient = 1;
+                            //todo faire le menu avec ZACHARIE
+                            break;
+                        case 4:
                             fmenu = 1;
                             fmplay = 0;
                             nup = 0;
@@ -685,11 +670,7 @@ int main(int argc, char *argv[])
                         SDL_RenderClear(renderer);
                         loadTableau(renderer);
                         SDL_Delay(50);
-                        if (!fmute)
-                        {
-                            actsound = chooseRandSound();
-                            Mix_PlayChannel(-1, actsound, 0);
-                        }
+
                         InsertCoin(renderer, nuc, replayfile);
                         SDL_RenderPresent(renderer);
                     }
@@ -703,13 +684,6 @@ int main(int argc, char *argv[])
                         j = 1;
                         closereplay();
                         createtab();
-                        Mix_FreeChunk(sound1);
-                        Mix_FreeChunk(sound2);
-                        Mix_FreeChunk(sound3);
-                        Mix_FreeChunk(sound4);
-                        Mix_FreeChunk(error);
-                        Mix_FreeChunk(win);
-                        Mix_FreeChunk(actsound);
                         print_menu_opts(font, renderer, num);
                     }
                     else if (fmreplay)
@@ -744,6 +718,7 @@ int main(int argc, char *argv[])
                         fplay = 1;
                         SDL_RenderClear(renderer);
                         createtab();
+                        createReplay();
                         createTableau(renderer);
                         loadTableau(renderer);
                         print_turn();
@@ -753,18 +728,13 @@ int main(int argc, char *argv[])
                         SDL_RenderClear(renderer);
                         loadTableau(renderer);
                         SDL_Delay(50);
-                        if (!fmute)
-                        {
-                            actsound = chooseRandSound();
-                            Mix_PlayChannel(-1, actsound, 0);
-                        }
                         char convert = nuc + '0';
                     senderc:
                         if (send(sock, &convert, sizeof(convert), 0) == SOCKET_ERROR)
                         {
                             printf("Erreur de transmission\n");
-                            terr++;
-                            if (terr < 5)
+                            sendErrNum++;
+                            if (sendErrNum < 5)
                             {
                                 goto senderc;
                             }
@@ -789,22 +759,16 @@ int main(int argc, char *argv[])
                     }
                     else if (fserver && fplay && !ended && j == 1)
                     {
-                        // TODO : send move to client
                         SDL_RenderClear(renderer);
                         loadTableau(renderer);
                         SDL_Delay(50);
-                        if (!fmute)
-                        {
-                            actsound = chooseRandSound();
-                            Mix_PlayChannel(-1, actsound, 0);
-                        }
                         buffer = nuc + '0';
                     senders:
                         if (send(sock, &buffer, sizeof(buffer), 0) == SOCKET_ERROR)
                         {
                             printf("Erreur de transmission\n");
-                            terr++;
-                            if (terr < 5)
+                            sendErrNum++;
+                            if (sendErrNum < 5)
                             {
                                 goto senders;
                             }
@@ -844,6 +808,19 @@ int main(int argc, char *argv[])
                         replacer(MUTE, "Mute:0");
                     }
                     break;
+                case SDLK_p:
+                {
+                    // pause music
+                    if (Mix_PausedMusic() == 1)
+                    {
+                        Mix_ResumeMusic();
+                    }
+                    else
+                    {
+                        Mix_PauseMusic();
+                    }
+                    break;
+                }
                 case SDLK_a:
                     // loop through music
                     printf("aaaaa\n");
@@ -866,11 +843,49 @@ int main(int argc, char *argv[])
                         floop = 1;
                     }
                     break;
+                case SDLK_PLUS:
+                case SDLK_KP_PLUS:
+                    if (Mix_VolumeMusic(-1) < 128)
+                    {
+                        Mix_VolumeMusic(Mix_VolumeMusic(-1) + 2);
+                    }
+                    break;
+                case SDLK_MINUS:
+                case SDLK_KP_MINUS:
+                    if (Mix_VolumeMusic(-1) > 0)
+                    {
+                        Mix_VolumeMusic(Mix_VolumeMusic(-1) - 2);
+                    }
+                    break;
                 default:
                     break;
                 }
             }
         }
+        if (event.type == SDL_WINDOWEVENT)
+        {
+            switch (event.window.event)
+            {
+            case SDL_WINDOWEVENT_RESIZED:
+                SDL_Log("Window %d resized to %dx%d",
+                        event.window.windowID, event.window.data1,
+                        event.window.data2);
+                resized = SDL_TRUE;
+                break;
+            case SDL_WINDOWEVENT_SIZE_CHANGED:
+                SDL_Log("Window %d size changed to %dx%d",
+                        event.window.windowID, event.window.data1,
+                        event.window.data2);
+                resized = SDL_TRUE;
+                break;
+            }
+            if (resized)
+            {
+                resized = SDL_FALSE;
+                reprint(renderer);
+            }
+        }
+
         else if (event.type == SDL_MOUSEMOTION)
         {
             const SDL_Point pt = {event.motion.x, event.motion.y};
@@ -932,7 +947,7 @@ int main(int argc, char *argv[])
                     InsertCoin(renderer, rnum, replayfile);
                     SDL_RenderPresent(renderer);
                 }
-                else if (ec == 0)
+                else if (ec == 0 || ec == SOCKET_ERROR)
                 {
                     printf("Connexion perdue.");
                     closesocket(sock);
@@ -940,6 +955,7 @@ int main(int argc, char *argv[])
                     recter.x = 400;
                     recter.y = 50;
                     printText(font, renderer, red_color, "La connexion a ete perdue.", &recter, black_color);
+                    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Connexion perdue", "La connexion a ete perdue!", NULL);
                     SDL_Delay(2000);
                     fplay = 0;
                     fmenu = 1;
@@ -962,7 +978,7 @@ int main(int argc, char *argv[])
                     InsertCoin(renderer, rnum, replayfile);
                     SDL_RenderPresent(renderer);
                 }
-                else if (ec == 0)
+                else if (ec == 0 || ec == SOCKET_ERROR)
                 {
                     printf("Connexion perdue.");
                     closesocket(sock);
@@ -970,6 +986,7 @@ int main(int argc, char *argv[])
                     recter.x = 400;
                     recter.y = 50;
                     printText(font, renderer, red_color, "La connexion a ete perdue.", &recter, black_color);
+                    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Connexion perdue", "La connexion a ete perdue!", NULL);
                     SDL_Delay(2000);
                     fplay = 0;
                     fmenu = 1;
@@ -994,6 +1011,7 @@ int main(int argc, char *argv[])
                 {
                     print_bg();
                     print_ip_renderer(font, renderer, inputText);
+                    printf("gothee\n");
                 }
             }
             // Text is empty
@@ -1009,11 +1027,11 @@ int main(int argc, char *argv[])
                 if (fclient)
                 {
                     print_bg();
-                    print_ip_renderer(font, renderer, inputText);
+                    print_ip_renderer(font, renderer, " ");
                 }
             }
         }
-        // SDL_Delay(20);
+        SDL_Delay(20);
     }
     statut = EXIT_SUCCESS;
     SDL_StopTextInput();
@@ -1031,6 +1049,13 @@ Quit:
     TTF_CloseFont(tfont);
     TTF_Quit();
     SDL_Quit();
+    Mix_FreeChunk(sound1);
+    Mix_FreeChunk(sound2);
+    Mix_FreeChunk(sound3);
+    Mix_FreeChunk(sound4);
+    Mix_FreeChunk(error);
+    Mix_FreeChunk(win);
+    Mix_FreeChunk(actsound);
     Mix_FreeMusic(actmusic);
     actmusic = NULL;
     actsound = NULL;
