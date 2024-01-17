@@ -15,6 +15,7 @@ bool file_exists(const char *filename)
 int main()
 {
     int i = 1;
+    char* ok;
     clrscr();
     clrscr();
     printf("Hello, World!\n");
@@ -23,7 +24,7 @@ int main()
     printf("Creating replays folder.\n");
     int check;
     char *dirname = "replays";
-    check = mkdir(dirname);
+    check = mkdir(dirname, 777);
     if (!check)
     {
         printf("Directory created.\n");
@@ -48,19 +49,19 @@ int main()
     }
     sleep(1);
     printf("Press enter to continue.\n");
-    getch();
+    getchar();
     clrscr();
     printf("Showing contents of directory.\n");
     sleep(1);
     chdir(dirname);
     system("ls||dir");
     printf("\nPress enter to continue.\n");
-    getch();
+    getchar();
     clrscr();
 
     printf("Creating replay file.\n");
     sleep(1);
-    getch();
+    getchar();
     FILE *fptr;
     char filename[250];
     bool choosename = false;
@@ -136,7 +137,8 @@ int main()
     }
 
     printf("Press enter to continue.\n");
-    getch();
+    getchar();
+    sleep(2);
     clrscr();
     exit(0);
 }
