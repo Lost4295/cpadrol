@@ -21,18 +21,19 @@ int main(int argc, char *argv[])
     int exit=1;
         while (exit) {
             choices(choix);
-            option = getchar();
-            if (option == 27) {
+            getch();getch();
+            option = getch();
+            if (option == '\033') {
                 return 0;      
             } else if (option == 10) {
                 exit = 0;
-            } else if (option == 65) {
+            } else if (option == 'A') {
                 if(choix == 1){
                     continue;
                 } else {
                     choix--;
                 }
-            } else if (option == 66) {
+            } else if (option == 'B') {
                 if(choix == 4){
                     continue;
                 } else {
@@ -47,27 +48,27 @@ int main(int argc, char *argv[])
                 printf("Vous avez choisi Serveur\n");
                 sleep(2);
                 system("clear");                
-                system("p4s.exe");
+                system("./p4s");
                 break;
             case 2:
                 system("clear");
                 printf("Vous avez choisi Client\n");
                 sleep(2);
                 system("clear");
-                system("p4c.exe");
+                system("./p4c");
                 break;
             case 3:
                 system("clear");
                 printf("Vous avez choisi Replays\n");
                 sleep(2);
                 system("clear");
-                system("replays.exe");
+                system("./replays");
             case 4: 
                 system("clear");
                 printf("Vous avez choisi Options\n");
                 sleep(2);
                 system("clear");
-                system("options.exe");
+                system("./options");
         }
     return 0;
 }
