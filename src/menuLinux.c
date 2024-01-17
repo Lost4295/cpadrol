@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <curses.h>
 
 void choices(int choix) {
     system("clear");   
@@ -21,24 +23,27 @@ int main(int argc, char *argv[])
     int exit=1;
         while (exit) {
             choices(choix);
-            getch();getch();
-            option = getch();
-            if (option == '\033') {
+            if (getch() == "\033") {
+                getch();
+                option = getch();
+                if (option == 'A') {
+                    if(choix == 1){
+                        continue;
+                    } else {
+                        choix--;
+                    }
+                } else if (option == 'B') {
+                    if(choix == 4){
+                        continue;
+                    } else {
+                        choix++;
+                    }
+                }
+            }
+            else if (option == 27) {
                 return 0;      
             } else if (option == 10) {
                 exit = 0;
-            } else if (option == 'A') {
-                if(choix == 1){
-                    continue;
-                } else {
-                    choix--;
-                }
-            } else if (option == 'B') {
-                if(choix == 4){
-                    continue;
-                } else {
-                    choix++;
-                }
             }
         }
 
