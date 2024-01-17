@@ -128,7 +128,7 @@ bool init() {
 	}
 
 	// Load sound
-	sound = Mix_LoadWAV("scratch.wav");
+	sound = Mix_LoadWAV("music/scratch.wav");
 	if ( !sound ) {
 		printf("Error loading sound: %s\n", Mix_GetError());
 		return false;
@@ -137,6 +137,48 @@ bool init() {
 	// Play music forever
 	Mix_PlayMusic( music, -1 );
 
+const SDL_MessageBoxButtonData buttons[] = {
+		{ /* .flags, .buttonid, .text */        0, 0, "no" },
+		{ SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, "yes" },
+		{ SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 2, "cancel" },
+        };
+        const SDL_MessageBoxColorScheme colorScheme = {
+            { /* .colors (.r, .g, .b) */
+              /* [SDL_MESSAGEBOX_COLOR_BACKGROUND] */
+                { 255,   0,   0 },
+                /* [SDL_MESSAGEBOX_COLOR_TEXT] */
+                { 0, 255,   0 },
+                /* [SDL_MESSAGEBOX_COLOR_BUTTON_BORDER] */
+                { 255, 255,   0 },
+                /* [SDL_MESSAGEBOX_COLOR_BUTTON_BACKGROUND] */
+                { 0,   0, 255 },
+                /* [SDL_MESSAGEBOX_COLOR_BUTTON_SELECTED] */
+                { 255,   0, 255 }
+            }
+        };
+
+        char* msg = "Couldn't load image %s.\nIMG_Error: ";
+        const SDL_MessageBoxData messageBoxData = {
+            SDL_MESSAGEBOX_INFORMATION, /* .flags */
+            NULL, /* .window */
+            "Error", /* .title */
+            msg, /* message */
+            SDL_arraysize(buttons), /* .numbuttons */
+            buttons, /* .buttons */
+            //&colorScheme /* .colorScheme */
+			NULL
+		};
+
+        int buttonid;
+		if (SDL_ShowMessageBox(&messageBoxData, &buttonid) < 0) {
+		SDL_Log("error displaying message box");
+		return 1;
+	}
+	if (buttonid == -1) {
+		SDL_Log("no selection");
+	} else {
+		SDL_Log("selection was %s (%d)", buttons[buttonid].text, buttonid);
+	}
 	return true;
 }
 

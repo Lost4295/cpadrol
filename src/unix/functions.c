@@ -53,11 +53,12 @@ SDL_Rect color_knob;
 SDL_Rect color_knob2;
 SDL_Rect color_knob3;
 SDL_Rect color_knob4;
+
 static float color_slider_value = 1.0f;
 static float color_slider_value2 = 1.0f;
 static float color_slider_value3 = 1.0f;
 static float color_slider_value4 = 1.0f;
-// TODO : ajouter le replayer qui crée tout
+
 // TODO : Implémenter le multijoueur
 
 // TODO : Faire les vérifs du fichier de config;
@@ -77,6 +78,8 @@ SDL_Color black_color = {0, 0, 0, 255};
 SDL_Color red_color = {255, 0, 0, 255};
 SDL_Color yellow_color = {255, 255, 0, 255};
 SDL_Color white_color = {255, 255, 255, 255};
+bool needenter = false;
+bool adv = false;
 Mix_Music *actmusic;
 Mix_Chunk *sound1;
 Mix_Chunk *sound2;
@@ -111,7 +114,7 @@ char *settings = "Paramètres";
 char *quit = "Quitter";
 char *host = "Héberger la connexion";
 char *client = "Se connecter à un serveur";
-char *lookup= "Chercher un serveur";
+char *lookup = "Chercher un serveur";
 char *local = "Jouer à deux en local";
 char *music = "Changer de musique";
 char *retour = "Retour";
@@ -1411,7 +1414,7 @@ void print_files(TTF_Font *font, SDL_Renderer *renderer, int num)
     SDL_RenderPresent(renderer);
 }
 
-void getfile(int num)
+void replayGame(int num)
 {
     struct stat stats;
     DIR *d;
@@ -1437,6 +1440,87 @@ void getfile(int num)
                         return 1;
                     }
                     printf("File %s opened successfully.\n", dir->d_name);
+                    int choice;
+                    int animation;
+
+                    const SDL_MessageBoxButtonData buttons[] = {
+                        {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, "Oui"},
+                        {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "Non"},
+                    };
+
+                    char *msg = "Voulez-vous avoir des animations ? \n(Attention ! Cette action n'aura aucun effet.) ";
+                    const SDL_MessageBoxData messageBoxData = {
+                        SDL_MESSAGEBOX_INFORMATION, /* .flags */
+                        NULL,                       /* .window */
+                        "Animation",                /* .title */
+                        msg,                        /* message */
+                        SDL_arraysize(buttons),     /* .numbuttons */
+                        buttons,                    /* .buttons */
+                        NULL};
+                    printf("Do you want to have animations ?\n");
+                    printf("1. Yes\n");
+                    printf("2. No\n");
+                    if (SDL_ShowMessageBox(&messageBoxData, &choice) < 0)
+                    {
+                        SDL_Log("error displaying message box");
+                        return 1;
+                    }
+                    if (choice == -1)
+                    {
+                        SDL_Log("no selection");
+                    }
+                    else
+                    {
+                        SDL_Log("selection was %s (%d)", buttons[choice].text, choice);
+                    }
+                    if (choice == 1)
+                    {
+                        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Animations", "Animations activées.", NULL);
+                        printf("Animations activated.\n");
+                        animation = 1;
+                    }
+                    else
+                    {
+                        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Animations", "Animations désactivées.", NULL);
+                        printf("Animations desactivated.\n");
+                        animation = 0;
+                    }
+                    char *msg2 = "Voulez vous appuyer sur entrée pour faire avancer la partie ?";
+                    const SDL_MessageBoxData messageBoxData2 = {
+                        SDL_MESSAGEBOX_INFORMATION, /* .flags */
+                        NULL,                       /* .window */
+                        "Avancée de jeu manuel",    /* .title */
+                        msg2,                        /* message */
+                        SDL_arraysize(buttons),     /* .numbuttons */
+                        buttons,                    /* .buttons */
+                        NULL};
+                    printf("Do you want to press to make the game advance ?\n");
+                    printf("1. Yes\n");
+                    printf("2. No\n");
+                    if (SDL_ShowMessageBox(&messageBoxData2, &choice) < 0)
+                    {
+                        SDL_Log("error displaying message box");
+                        return 1;
+                    }
+                    if (choice == -1)
+                    {
+                        SDL_Log("no selection");
+                    }
+                    else
+                    {
+                        SDL_Log("selection was %s (%d)", buttons[choice].text, choice);
+                    }
+                    if (choice == 1)
+                    {
+                        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Avancée de jeu manuel", "Avancée de jeu manuel activée.\n Appuyez sur entrée pour faire avancer la partie.", NULL);
+                        printf("Press enter to make the game advance.\n");
+                        adv = true;
+                    }
+                    else
+                    {
+                        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Avancée de jeu manuel", "Le jeu va avancer automatiquement.", NULL);
+                        printf("The game will advance automatically.\n");
+                    }
                     char line[250];
                     int lcount = 1;
                     while (fgets(line, sizeof(line), f) != NULL)
@@ -1483,13 +1567,15 @@ void getfile(int num)
                                 {
                                     printf("fait le Coup %s. \n", p);
                                     turnsreplay(p);
-                                    // if (adv)
-                                    //{
-                                    //     printf("Press enter to continue.\n");
-                                    //     getchar();
-                                    // } else {
-                                    SDL_Delay(500);
-                                    //}
+                                    if (adv)
+                                    {
+                                        printf("Press enter to continue.\n");
+                                        getchar(); // TODO à retirer de toute urgence !
+                                    }
+                                    else
+                                    {
+                                        SDL_Delay(500);
+                                    }
                                 }
                                 else
                                 {
@@ -1525,24 +1611,6 @@ void getfile(int num)
     }
 }
 
-void print_ask_auto()
-{
-    SDL_RenderClear(renderer);
-    SDL_Surface *image = IMG_Load("image.jpeg");
-    SDL_Texture *img_texture = NULL;
-    if (!image)
-    {
-        printf("Erreur de chargement de l'image : %s", SDL_GetError());
-    }
-    img_texture = SDL_CreateTextureFromSurface(renderer, image);
-    SDL_RenderCopy(renderer, img_texture, NULL, NULL);
-    SDL_Rect rects;
-    rects.x = 0;
-    rects.y = 20;
-    rects.w = 100;
-    rects.h = 100;
-    printText(font, renderer, black_color, "Voulez vous que le replay soit automatique ? ", &rects, white_color);
-}
 
 int replacer(int line, char *wrline)
 {
@@ -1761,8 +1829,31 @@ long int findSize(char file_name[])
 void createReplay()
 {
     printf("Writing file\n");
-    replayfile = fopen("replays/replay.txt", "w");
-    // magouille pour créer un new file
+    char filename[250];
+    int i = 1;
+    chdir("replays");
+    bool createit = false;
+    strcpy(filename, "replay1.txt");
+    do
+    {
+        if (!file_exists(filename))
+        {
+            replayfile = fopen(filename, "w");
+            printf("File %s created.\n", filename);
+        }
+        else
+        {
+            printf("File %s already exists.\n", filename);
+            createit = true;
+        }
+        i++;
+        sprintf(filename, "replay%d.txt", i);
+    } while (file_exists(filename));
+    if (createit)
+    {
+        replayfile = fopen(filename, "w");
+        printf("File %s created.\n", filename);
+    }
     if (flocal)
     {
         fprintf(replayfile, "Joueur 1 -Joueur 2\n");
@@ -1791,6 +1882,7 @@ void createReplay()
         }
         fprintf(replayfile, "%s -%s\n", player1ps, player2ps);
     }
+    chdir("../");
 }
 
 void closereplay()
@@ -1846,9 +1938,12 @@ void reprint(SDL_Renderer *renderer)
     }
     else if (fmreplay)
     {
+        print_replay_title();
+        printreplayfiles();
     }
     else if (fccolor)
     {
+        print_color();
     }
     else if (fsettings)
     {
@@ -1865,18 +1960,19 @@ void reprint(SDL_Renderer *renderer)
     }
     else if (fconfig)
     {
+        print_pseudo_maker(font, renderer, inputText);
     }
     else if (freplay)
     {
     }
     else if (fchmusic)
     {
+        print_music_title();
+        printmusicfiles(font, renderer, numm);
     }
     else if (ended)
     {
-    }
-    else if (secret)
-    {
+        printText(font, renderer, white_color, "Appuyez sur entrée pour revenir au menu.", &authors, black_color);
     }
     SDL_RenderPresent(renderer);
 }

@@ -38,7 +38,7 @@ int printreplayfiles();
 int printmusicfiles(TTF_Font *font, SDL_Renderer *renderer, int num);
 void print_replay_title();
 void print_files(TTF_Font *font, SDL_Renderer *renderer, int num);
-void getfile(int num);
+void replayGame(int num);
 void print_ask_auto();
 void musicFinishedCallback();
 SOCKET tryconnectc(char *ip);
@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
                     }
                     if (fmplay)
                     {
-                        (nup == 0) ? nup = 3 : nup--;
+                        (nup == 0) ? nup = 4 : nup--;
                         print_play_opts(font, renderer, nup);
                     }
                     if (fsettings)
@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
                     }
                     if (fmplay)
                     {
-                        (nup == 3) ? nup = 0 : nup++;
+                        (nup == 4) ? nup = 0 : nup++;
                         print_play_opts(font, renderer, nup);
                     }
                     if (fsettings)
@@ -653,7 +653,7 @@ int main(int argc, char *argv[])
                         case 3:
                             fmplay = 0;
                             fclient = 1;
-                            //todo faire le menu avec ZACHARIE
+                            // todo faire le menu avec ZACHARIE
                             break;
                         case 4:
                             fmenu = 1;
@@ -688,7 +688,10 @@ int main(int argc, char *argv[])
                     }
                     else if (fmreplay)
                     {
-                        getfile(nur);
+
+
+
+                        replayGame(nur);
                         createtab();
                         fmreplay = 0;
                         fmenu = 1;
@@ -791,6 +794,9 @@ int main(int argc, char *argv[])
                         InsertCoin(renderer, nuc, replayfile);
                         SDL_RenderPresent(renderer);
                     }
+                    else if (adv && needenter){
+                        needenter = false;
+                    }
                     break;
                 case SDLK_m:
                     // mute music and all sounds
@@ -892,7 +898,7 @@ int main(int argc, char *argv[])
             if (fccolor)
             {
                 if (SDL_PointInRect(&pt, &hcolor_rect) && (event.motion.state & SDL_BUTTON_LMASK))
-                { // mouse is pressed inside the "color" "slider"?
+                {
                     const float fx = (float)(pt.x - color_rect.x);
                     color_slider_value = (fx / ((float)color_rect.w)); // a value between 0.0f and 1.0f
                     printf("SLIDING 1! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(color_slider_value * 100.0f));
@@ -901,7 +907,7 @@ int main(int argc, char *argv[])
                     color_knob.x = SDL_min(color_knob.x, (color_rect.x + color_rect.w) - color_knob.w);
                 }
                 else if (SDL_PointInRect(&pt, &hcolor_rect2) && (event.motion.state & SDL_BUTTON_LMASK))
-                { // mouse is pressed inside the "color" "slider"?
+                {
                     const float fx = (float)(pt.x - color_rect2.x);
                     color_slider_value2 = (fx / ((float)color_rect2.w)); // a value between 0.0f and 1.0f
                     printf("SLIDING 2 ! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(color_slider_value2 * 100.0f));
@@ -910,7 +916,7 @@ int main(int argc, char *argv[])
                     color_knob2.x = SDL_min(color_knob2.x, (color_rect2.x + color_rect2.w) - color_knob2.w);
                 }
                 else if (SDL_PointInRect(&pt, &hcolor_rect3) && (event.motion.state & SDL_BUTTON_LMASK))
-                { // mouse is pressed inside the "color" "slider"?
+                {
                     const float fx = (float)(pt.x - color_rect3.x);
                     color_slider_value3 = (fx / ((float)color_rect3.w)); // a value between 0.0f and 1.0f
                     printf("SLIDING 3! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(color_slider_value3 * 100.0f));
@@ -919,7 +925,7 @@ int main(int argc, char *argv[])
                     color_knob3.x = SDL_min(color_knob3.x, (color_rect3.x + color_rect3.w) - color_knob3.w);
                 }
                 else if (SDL_PointInRect(&pt, &hcolor_rect4) && (event.motion.state & SDL_BUTTON_LMASK))
-                { // mouse is pressed inside the "color" "slider"?
+                {
                     const float fx = (float)(pt.x - color_rect4.x);
                     color_slider_value4 = (fx / ((float)color_rect4.w)); // a value between 0.0f and 1.0f
                     printf("SLIDING 4! At %dx%d (%d percent)\n", pt.x, pt.y, (int)SDL_round(color_slider_value4 * 100.0f));
@@ -1011,7 +1017,7 @@ int main(int argc, char *argv[])
                 {
                     print_bg();
                     print_ip_renderer(font, renderer, inputText);
-                    printf("gothee\n");
+                    printf("gothee\n"); // effacer
                 }
             }
             // Text is empty
