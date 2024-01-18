@@ -23,11 +23,10 @@ int main(int argc, char *argv[])
     int exit=1;
             choices(choix);
         while (exit) {
-            option = _getch();
-            printf("%c", option);
+            option = getch();
             if (option == "\033") {
-                _getch();
-                option = _getch();
+                getch();
+                option = getch();
                 if (option == 'A') {
                     if(choix == 1){
                         continue;

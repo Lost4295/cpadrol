@@ -1,7 +1,79 @@
 
+#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <ncurses.h>
+#include <curses.h>
+
+int main(void)
+{
+    initscr();
+    cbreak();
+    noecho();
+    char **options[4];
+    char *play = "Play";
+    char *multiplayer = "Multiplayer";
+    char *settings = "Options";
+    char *quit = "Quit";
+    options[0] = &play;
+    options[1] = &multiplayer;
+    options[2] = &settings;
+    options[3] = &quit;
+    int select = 0;
+    char *choose;
+    int exit = 0;
+    printw("hi!");
+    while (!exit)
+    {
+        choices(select);
+        if (getch() == '\033')
+        {            // if the first value is esc
+            getch(); // skip the [
+            switch (getch())
+            { // the real value
+            case 'A':
+                // code for arrow up
+                (select == 0) ? select = 3 : select--;
+                clear();
+                break;
+            case 'B':
+                // code for arrow down
+                (select == 3) ? select = 0 : select++;
+                clear();
+                break;
+            case 'C':
+                printw("Option selected : %s\n\n", *options[select]);
+                switch (select)
+                {
+                case 0:
+                    printw("Let's play ! Hahahaha \n\n\n");
+                    break;
+                case 1:
+                    printw("Multiplayer play !!!!\n\n\n");
+                    break;
+                case 2:
+                    printw("Here are the options.\n\n");
+                    break;
+                case 3:
+                    printw("Goodbye !\n\n");
+                    goto end;
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case 'D':
+            end:
+                // code for arrow left
+                endwin();
+                exit = 1;
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    endwin();
+    return 0;
+}
 
 void choices(int choix) {
     system("clear");   
@@ -13,71 +85,4 @@ void choices(int choix) {
     
     printw("\nUtilisez les fleches pour selectionner.\nAppuyez sur \"Entree\" pour confirmer.\nAppuyez sur \"esc\" pour quitter.");
     printw("\n\n\n\n\n COPYRIGHT: All rights reserved (Mathis VAREILLES, Ylan TURIN-KONDI, Zacharie ROGER)");
-}
-
-int main(int argc, char *argv[])
-{
-    
-    initscr();
-    noecho();
-
-    int choix = 1;
-    int option;
-    int exit=1;
-        while (exit) {
-            choices(choix);
-            scanf();
-            getch();getch();
-            option = getch();
-            if (option == '\033') {
-                return 0;      
-            } else if (option == 10) {
-                exit = 0;
-            } else if (option == 'A') {
-                if(choix == 1){
-                    continue;
-                } else {
-                    choix--;
-                }
-            } else if (option == 'B') {
-                if(choix == 4){
-                    continue;
-                } else {
-                    choix++;
-                }
-            }
-        }
-
-        switch(choix) { 
-            case 1:
-                system("clear");
-                printw("Vous avez choisi Serveur\n");
-                sleep(2);
-                system("clear");                
-                system("./p4s");
-                break;
-            case 2:
-                system("clear");
-                printw("Vous avez choisi Client\n");
-                sleep(2);
-                system("clear");
-                system("./p4c");
-                break;
-            case 3:
-                system("clear");
-                printw("Vous avez choisi Replays\n");
-                sleep(2);
-                system("clear");
-                system("./replays");
-                break;
-            case 4: 
-                system("clear");
-                printw("Vous avez choisi Options\n");
-                sleep(2);
-                system("clear");
-                system("./options");
-                break;
-        }
-    endwin();
-    return 0;
 }
