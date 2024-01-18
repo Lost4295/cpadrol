@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_net.h>
 #include <SDL2/SDL_mixer.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,14 +54,14 @@ SDL_Rect color_knob;
 SDL_Rect color_knob2;
 SDL_Rect color_knob3;
 SDL_Rect color_knob4;
-
+TCPsocket tcpsock;
 static float color_slider_value = 1.0f;
 static float color_slider_value2 = 1.0f;
 static float color_slider_value3 = 1.0f;
 static float color_slider_value4 = 1.0f;
 
 // TODO : Implémenter le multijoueur
-
+// TODO Voir l'envoi du pseudo avec zacharie
 // TODO : Faire les vérifs du fichier de config;
 // TODO : Handle les errors connes style (config mais pas de config dedans)
 // TODO : ranger les fichiers dans des dossiers et cleaner tout
@@ -90,12 +91,16 @@ Mix_Chunk *win;
 Mix_Chunk *lose;
 Mix_Chunk *actsound;
 
-SOCKET sock;
+int fsy = 0;
+int fsm = 0;
+int fsz = 0;
 
 int sendErrNum = 0;
 char inputText[50];
 char ip[50];
 char *player1ps;
+char *player2ps;
+char *player2ps;
 int num = 0, nus = 0, nup = 0, nuc = 0, nur = 0, numm = 1;
 int flocal = 0, fserver = 0, fclient = 0;
 int fmplay = 0, fmreplay = 0, fccolor = 0, fsettings = 0, fmenu = 0, fplay = 0, fconfig = 1, freplay = 0, fauto = -1, fchmusic = 0, fmauto = 0, floop = 1, fmute = 0;
@@ -269,6 +274,11 @@ int init(SDL_Window **window, SDL_Renderer **renderer, int w, int h)
     {
         printf("Error initializing SDL_mixer: %s\n", Mix_GetError());
         return false;
+    }
+    if (SDLNet_Init() < 0)
+    {
+        fprintf(stderr, "SDLNet_Init: %s\n", SDLNet_GetError());
+        exit(EXIT_FAILURE);
     }
     font = TTF_OpenFont("Roboto.ttf", 32);
     lfont = TTF_OpenFont("Roboto.ttf", 18);
@@ -540,11 +550,25 @@ void get_user_vars(TTF_Font *font, SDL_Renderer *renderer)
         char *p = strtok(line, d);
         if (strcmp(p, "Pseudo") == 0)
         {
+            char *ane;
             p = strtok(NULL, d);
-            player1ps = strtok(p, n);
+            ane = strtok(p, n);
             strcpy(texte, "Bonjour, ");
-            strcat(texte, player1ps);
+            strcat(texte, ane);
             strcat(texte, " !");
+            player1ps = ane;
+            if (strcmp(ane, "Zacharie") == 0)
+            {
+                fsz = 1;
+            }
+            else if (strcmp(ane, "Ylan") == 0)
+            {
+                fsy = 1;
+            }
+            else if (strcmp(ane, "Mathis") == 0)
+            {
+                fsm = 1;
+            }
         }
         else if (strcmp(p, "Music") == 0)
         {
@@ -794,6 +818,7 @@ int InsertCoin(SDL_Renderer *renderer, int num, FILE *replayfile)
                 Mix_PlayChannel(-1, actsound, 0);
             }
             SDL_RenderFillCircle(renderer, num * 50 + 25, i * 50 + 25, 20);
+            checkSecretPions(i, num);
             break;
         }
     }
@@ -805,7 +830,55 @@ int InsertCoin(SDL_Renderer *renderer, int num, FILE *replayfile)
     (*pj == 1) ? (*pj = 2) : (*pj = 1);
     print_turn();
 }
+void checkSecretPions(int i, int j){
+SDL_Rect rct = {j * 50+7, i * 50+7, 35, 35};
+if ((fsy && tableau[i][j] == 1) || (fsy && tableau[i][j] == 3)
+                /*|| (strcmp("Ylan",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
+            {
+                SDL_Surface *image = IMG_Load("ylan.png");
+                SDL_Texture *img_texture = NULL;
+                if (!image)
+                {
+                    printf("Erreur de chargement de l'image : %s", SDL_GetError());
+                    return -1;
+                }
+                img_texture = SDL_CreateTextureFromSurface(renderer, image);
+                SDL_RenderCopy(renderer, img_texture, NULL, &rct);
+                SDL_DestroyTexture(img_texture);
+                SDL_FreeSurface(image);
+            }
+            if ((fsm && tableau[i][j] == 1) || (fsm && tableau[i][j] == 3)
+                /*|| (strcmp("Mathis",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
+            {
+                SDL_Surface *image = IMG_Load("mathis.png");
+                SDL_Texture *img_texture = NULL;
+                if (!image)
+                {
+                    printf("Erreur de chargement de l'image : %s", SDL_GetError());
+                    return -1;
+                }
 
+                img_texture = SDL_CreateTextureFromSurface(renderer, image);
+                SDL_RenderCopy(renderer, img_texture, NULL, &rct);
+                SDL_DestroyTexture(img_texture);
+                SDL_FreeSurface(image);
+            }
+            if ((fsz && tableau[i][j] == 1) || (fsz && tableau[i][j] == 3)
+                /*|| (strcmp("Zacharie",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
+            {
+                SDL_Surface *image = IMG_Load("zacharie.png");
+                SDL_Texture *img_texture = NULL;
+                if (!image)
+                {
+                    printf("Erreur de chargement de l'image : %s", SDL_GetError());
+                    return -1;
+                }
+                img_texture = SDL_CreateTextureFromSurface(renderer, image);
+                SDL_RenderCopy(renderer, img_texture, NULL, &rct);
+                SDL_DestroyTexture(img_texture);
+                SDL_FreeSurface(image);
+            }
+}
 void print_turn()
 {
     if (!ended)
@@ -826,9 +899,10 @@ void print_turn()
         printChooseArrow(renderer, nuc);
         SDL_Rect re2;
         re.x = 400;
-        re.y = 120;
+        re.y = 70;
         if ((fserver && j == 2) || (fclient && j == 1))
         {
+            printf("En attente de l'autre joueur...\n");
             printText(lfont, renderer, white_color, "En attente de l'autre joueur...", &re2, black_color);
         }
     }
@@ -942,6 +1016,8 @@ int loadTableau(SDL_Renderer *renderer)
                 SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
             }
             SDL_RenderFillCircle(renderer, j * 50 + 25, i * 50 + 25, 20);
+            
+            checkSecretPions(i,j);
         }
     }
 
@@ -1490,7 +1566,7 @@ void replayGame(int num)
                         SDL_MESSAGEBOX_INFORMATION, /* .flags */
                         NULL,                       /* .window */
                         "Avancée de jeu manuel",    /* .title */
-                        msg2,                        /* message */
+                        msg2,                       /* message */
                         SDL_arraysize(buttons),     /* .numbuttons */
                         buttons,                    /* .buttons */
                         NULL};
@@ -1610,7 +1686,6 @@ void replayGame(int num)
         closedir(d);
     }
 }
-
 
 int replacer(int line, char *wrline)
 {
@@ -1864,21 +1939,25 @@ void createReplay()
         char player2ps[100];
         if (fserver)
         {
-            if (send(sock, player1ps, sizeof(player1ps), 0) != SOCKET_ERROR)
-            {
-                printf("Sent : %s\n", player1ps);
-                recv(sock, player2ps, sizeof(player2ps), 0);
-                printf("Received : %s\n", player2ps);
-            }
+            // TODO erase
+            // if (send(sock, player1ps, sizeof(player1ps), 0) != SOCKET_ERROR)
+            //{
+            //     printf("Sent : %s\n", player1ps);
+            //     recv(sock, player2ps, sizeof(player2ps), 0);
+            //     printf("Received : %s\n", player2ps);
+            // }
+            // TODO Enderase
         }
         else
         {
-            if (recv(sock, player2ps, sizeof(player2ps), 0) != SOCKET_ERROR)
-            {
-                printf("Received : %s\n", player2ps);
-                send(sock, player1ps, sizeof(player1ps), 0);
-                printf("Sent : %s\n", player1ps);
-            }
+            // TODO erase
+            // if (recv(sock, player2ps, sizeof(player2ps), 0) != SOCKET_ERROR)
+            // {
+            //    printf("Received : %s\n", player2ps);
+            //    send(sock, player1ps, sizeof(player1ps), 0);
+            //    printf("Sent : %s\n", player1ps);
+            // }
+            // TODO Enderase
         }
         fprintf(replayfile, "%s -%s\n", player1ps, player2ps);
     }
@@ -1975,4 +2054,76 @@ void reprint(SDL_Renderer *renderer)
         printText(font, renderer, white_color, "Appuyez sur entrée pour revenir au menu.", &authors, black_color);
     }
     SDL_RenderPresent(renderer);
+}
+TCPsocket createServer()
+{
+    IPaddress ip;
+    TCPsocket server;
+
+    if (SDLNet_ResolveHost(&ip, NULL, PORT) < 0)
+    {
+        fprintf(stderr, "SDLNet_ResolveHost: %s\n", SDLNet_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    server = SDLNet_TCP_Open(&ip);
+    if (!server)
+    {
+        fprintf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    printf("En attente d'une connexion...\n");
+    TCPsocket client = NULL;
+    while (!client)
+    {
+        client = SDLNet_TCP_Accept(server);
+        if (client)
+        {
+            printf("Connexion établie.\n");
+            break;
+        }
+
+        SDL_Delay(100); // Attente de 100 ms
+    }
+
+    SDLNet_TCP_Close(server); // Fermer le serveur après la connexion du client
+    return client;
+}
+
+// Connexion à un serveur TCP
+TCPsocket createClient(const char *ip)
+{
+    IPaddress ipAddr;
+    TCPsocket client;
+
+    if (SDLNet_ResolveHost(&ipAddr, ip, PORT) < 0)
+    {
+        fprintf(stderr, "SDLNet_ResolveHost: %s\n", SDLNet_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    client = SDLNet_TCP_Open(&ipAddr);
+    if (!client)
+    {
+        fprintf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    return client;
+}
+
+// Envoyer un mouvement
+void sendMove(TCPsocket socket, int col)
+{
+    int32_t netCol = SDLNet_Read32(&col);
+    SDLNet_TCP_Send(socket, &netCol, sizeof(netCol));
+}
+
+// Recevoir un mouvement
+int receiveMove(TCPsocket socket)
+{
+    int32_t netCol;
+    SDLNet_TCP_Recv(socket, &netCol, sizeof(netCol));
+    return SDLNet_Read32(&netCol);
 }
