@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
         while (exit) {
             choices(choix);
             option = getch();
-            printf("%s", option);
+            printf("%c", option);
             if (option == "\033") {
                 getch();
                 option = getch();
