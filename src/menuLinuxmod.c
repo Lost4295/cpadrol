@@ -20,13 +20,13 @@ int main(int argc, char *argv[])
     
     initscr();
     noecho();
-    curs_set(FALSE);
 
     int choix = 1;
     int option;
     int exit=1;
         while (exit) {
             choices(choix);
+            scanf();
             getch();getch();
             option = getch();
             if (option == '\033') {
@@ -69,12 +69,14 @@ int main(int argc, char *argv[])
                 sleep(2);
                 system("clear");
                 system("./replays");
+                break;
             case 4: 
                 system("clear");
                 printw("Vous avez choisi Options\n");
                 sleep(2);
                 system("clear");
                 system("./options");
+                break;
         }
     endwin();
     return 0;
