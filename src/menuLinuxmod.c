@@ -10,13 +10,15 @@ int main(void)
     noecho();
     char **options[4];
     char *play = "Play";
-    char *multiplayer = "Multiplayer";
+    char *multiplayerc = "Multiplayer (Client)";
+    char *multiplayers = "Multiplayer (Server)";
     char *settings = "Options";
-    char *quit = "Quit";
+    char *replays = "Replays";
     options[0] = &play;
-    options[1] = &multiplayer;
-    options[2] = &settings;
-    options[3] = &quit;
+    options[1] = &multiplayerc;
+    options[2] = &multiplayers;
+    options[3] = &settings;
+    options[4] = &replays;
     int select = 0;
     char *choose;
     int exit = 0;
@@ -36,33 +38,39 @@ int main(void)
                 break;
             case 'B':
                 // code for arrow down
-                (select == 3) ? select = 0 : select++;
+                (select == 4) ? select = 0 : select++;
                 clear();
                 break;
-            case 'C':
+            case 10:
                 printw("Option selected : %s\n\n", *options[select]);
                 switch (select)
                 {
                 case 0:
                     printw("Let's play ! Hahahaha \n\n\n");
+                    system("./p4")
                     break;
                 case 1:
                     printw("Multiplayer play !!!!\n\n\n");
+                    system("./p4c")
                     break;
                 case 2:
-                    printw("Here are the options.\n\n");
+                    printw("Multiplayer play !!!!\n\n\n");
+                    system("./p4s")
                     break;
                 case 3:
-                    printw("Goodbye !\n\n");
-                    goto end;
+                    printw("Here are the settings.\n\n");
+                    system("./ps")
+                    break;
+                case 4:
+                    printw("Lest's take a look at the replays !\n\n");
+                    system("./replayer")
                     break;
                 default:
                     break;
                 }
                 break;
-            case 'D':
+            case 27:
             end:
-                // code for arrow left
                 endwin();
                 exit = 1;
                 break;
