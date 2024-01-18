@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
     int exit=1;
         while (exit) {
             choices(choix);
+            fflush(stdin);
             option = getch();
             if (option == "\033") {
                 getch();
