@@ -22,11 +22,13 @@ int main(void)
     int select = 0;
     char *choose;
     int exit = 0;
+    char option;
     printw("hi!");
     while (!exit)
     {
         choices(select);
-        if (getch() == '\033')
+        option = getch();
+        if (option == '\033')
         {            // if the first value is esc
             getch(); // skip the [
             switch (getch())
@@ -41,44 +43,47 @@ int main(void)
                 (select == 4) ? select = 0 : select++;
                 clear();
                 break;
-            case 10:
+            }
+        }
+        else
+            switch(option) {
+                case 10:
                 printw("Option selected : %s\n\n", *options[select]);
                 switch (select)
-                {
-                case 0:
-                    printw("Let's play ! Hahahaha \n\n\n");
-                    system("./p4");
-                    break;
-                case 1:
-                    printw("Multiplayer play !!!!\n\n\n");
-                    system("./p4c");
-                    break;
-                case 2:
-                    printw("Multiplayer play !!!!\n\n\n");
-                    system("./p4s");
-                    break;
-                case 3:
-                    printw("Here are the settings.\n\n");
-                    system("./ps");
-                    break;
-                case 4:
-                    printw("Lest's take a look at the replays !\n\n");
-                    system("./replayer");
+                    {
+                    case 0:
+                        printw("Let's play ! Hahahaha \n\n\n");
+                        system("./p4");
+                        break;
+                    case 1:
+                        printw("Multiplayer play !!!!\n\n\n");
+                        system("./p4c");
+                        break;
+                    case 2:
+                        printw("Multiplayer play !!!!\n\n\n");
+                        system("./p4s");
+                        break;
+                    case 3:
+                        printw("Here are the settings.\n\n");
+                        system("./ps");
+                        break;
+                    case 4:
+                        printw("Lest's take a look at the replays !\n\n");
+                        system("./replayer");
+                        break;
+                    default:
+                        break;
+                    }
+                break;
+                case 27:
+                    end:
+                    endwin();
+                    exit = 1;
                     break;
                 default:
                     break;
                 }
-                break;
-            case 27:
-            end:
-                endwin();
-                exit = 1;
-                break;
-            default:
-                break;
             }
-        }
-    }
     endwin();
     return 0;
 }
