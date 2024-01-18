@@ -21,25 +21,27 @@ int main(int argc, char *argv[])
     int choix = 1;
     int option;
     int exit=1;
-        while (exit) {
             choices(choix);
-            option = getch();
+        while (exit) {
+            option = _getch();
             printf("%c", option);
             if (option == "\033") {
-                getch();
-                option = getch();
+                _getch();
+                option = _getch();
                 if (option == 'A') {
                     if(choix == 1){
                         continue;
                     } else {
                         choix--;
                     }
+                choices(choix); 
                 } else if (option == 'B') {
                     if(choix == 4){
                         continue;
                     } else {
                         choix++;
                     }
+                choices(choix);
                 }
             }
             else if (option == 27) {
