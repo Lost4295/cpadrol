@@ -33,7 +33,7 @@ int main(void)
             { // the real value
             case 'A':
                 // code for arrow up
-                (select == 0) ? select = 3 : select--;
+                (select == 0) ? select = 4 : select--;
                 clear();
                 break;
             case 'B':
@@ -47,23 +47,23 @@ int main(void)
                 {
                 case 0:
                     printw("Let's play ! Hahahaha \n\n\n");
-                    system("./p4")
+                    system("./p4");
                     break;
                 case 1:
                     printw("Multiplayer play !!!!\n\n\n");
-                    system("./p4c")
+                    system("./p4c");
                     break;
                 case 2:
                     printw("Multiplayer play !!!!\n\n\n");
-                    system("./p4s")
+                    system("./p4s");
                     break;
                 case 3:
                     printw("Here are the settings.\n\n");
-                    system("./ps")
+                    system("./ps");
                     break;
                 case 4:
                     printw("Lest's take a look at the replays !\n\n");
-                    system("./replayer")
+                    system("./replayer");
                     break;
                 default:
                     break;
@@ -86,10 +86,11 @@ int main(void)
 void choices(int choix) {
     system("clear");   
     printw("\n================ BIENVENUE =================\n\nChoisissez\n\n");
-    printw("%sServeur\n", (choix==1)?"   " : "");
-    printw("%sClient\n", (choix==2)?"   " : "");
-    printw("%sReplays\n", (choix==3)?"   " : "");
-    printw("%sOptions\n", (choix==4)?"   " : "");
+    printw("%sSingle Player\n", (choix==0)?"   " : "");
+    printw("%sMultiplayer (Client)\n", (choix==1)?"   " : "");
+    printw("%sMultiplayer (Server)\n", (choix==2)?"   " : "");
+    printw("%sOptions\n", (choix==3)?"   " : "");
+    printw("%sReplays\n", (choix==4)?"   " : "");
     
     printw("\nUtilisez les fleches pour selectionner.\nAppuyez sur \"Entree\" pour confirmer.\nAppuyez sur \"esc\" pour quitter.");
     printw("\n\n\n\n\n COPYRIGHT: All rights reserved (Mathis VAREILLES, Ylan TURIN-KONDI, Zacharie ROGER)");
