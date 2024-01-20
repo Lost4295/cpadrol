@@ -27,20 +27,19 @@ void launchgame();
 int turns();
 void verifyadd(int colonne, int *joueur);
 void verifywin(int colonne, int *joueur);
-void endgame(int *wjoueur, int result);
+void endgame(int *wjoueur, int result, int mode);
 void checkligne(int *joueur);
 void checkcol(int *joueur);
 void checkdiag(int *joueur);
 void checknull();
 int tryconnect(int erreur);
+FILE *fp;
 int tab[LIGNES][COLONNES];
 int jactuel = 1;
 int *pjactuel = &jactuel;
 char buffer;
 int ended = 0;
 int animation = 0;
-
-
 
 int main(int argc, char *argv[])
 {
@@ -50,12 +49,14 @@ int main(int argc, char *argv[])
     }
     intro();
     WSADATA WSAData;
-    int erreur = WSAStartup(MAKEWORD(2,2), &WSAData);
+    int erreur = WSAStartup(MAKEWORD(2, 2), &WSAData);
     tryconnect(erreur);
 }
 
-int tryconnect(int erreur){
-    if(!erreur) {
+int tryconnect(int erreur)
+{
+    if (!erreur)
+    {
         SOCKET sock;
         SOCKADDR_IN sin;
         SOCKET csock;
@@ -64,24 +65,28 @@ int tryconnect(int erreur){
         int sock_err;
         sock = socket(AF_INET, SOCK_STREAM, 0);
         /* Si la socket est valide */
-        if(sock != INVALID_SOCKET) {
+        if (sock != INVALID_SOCKET)
+        {
             printf("La socket %d est maintenant ouverte en mode TCP/IP\n", sock);
             /* Configuration */
-            sin.sin_addr.s_addr    = htonl(INADDR_ANY);   /* Adresse IP automatique */ //TODO Pouvoir choisir l'adresse IP (publique ou privée), ou utiliser par défaut  son adresse IP locale  
-            sin.sin_family         = AF_INET;             /* Protocole familial (IP) */
-            sin.sin_port           = htons(PORT);         /* Listage du port */
-            sock_err = bind(sock, (SOCKADDR*)&sin, sizeof(sin));
+            sin.sin_addr.s_addr = htonl(INADDR_ANY); /* Adresse IP automatique */
+            sin.sin_family = AF_INET;                /* Protocole familial (IP) */
+            sin.sin_port = htons(PORT);              /* Listage du port */
+            sock_err = bind(sock, (SOCKADDR *)&sin, sizeof(sin));
             /* Si la socket fonctionne */
-            if(sock_err != SOCKET_ERROR) {
+            if (sock_err != SOCKET_ERROR)
+            {
                 /* Démarrage du listage (mode server) */
                 sock_err = listen(sock, 5);
                 printf("Tentative de connexion au client du port %d...\n", PORT);
                 /* Si la socket fonctionne */
-                if(sock_err != SOCKET_ERROR) {
+                if (sock_err != SOCKET_ERROR)
+                {
                     /* Attente pendant laquelle le client se connecte */
-                    printf("Patientez pendant que le client se connecte sur le port %d...\n", PORT);        
-                    csock = accept(sock, (SOCKADDR*)&csin, &recsize);
-                    if (csock == INVALID_SOCKET) {
+                    printf("Patientez pendant que le client se connecte sur le port %d...\n", PORT);
+                    csock = accept(sock, (SOCKADDR *)&csin, &recsize);
+                    if (csock == INVALID_SOCKET)
+                    {
                         printf("Erreur lors de l'acceptation de la connexion du client.\n");
                         closesocket(sock);
                         WSACleanup();
@@ -93,28 +98,41 @@ int tryconnect(int erreur){
                     createtab();
                     system("cls");
                     printtab();
-                    while(ended!=1){
-                        if (*pjactuel == 1){
-                        int num = turns();
-                        buffer = num+'0';
+                    while (ended != 1)
+                    {
+                        if (*pjactuel == 1)
+                        {
+                            int num = turns();
+                            buffer = num + '0';
                         sender:
-                        sock_err = send(csock, &buffer, sizeof(buffer), 0);
-                        if(sock_err != SOCKET_ERROR) {
-                            *pjactuel = 2;
-                        } else{
-                            printf("Erreur de transmission\n");
-                            goto sender;
+                            sock_err = send(csock, &buffer, sizeof(buffer), 0);
+                            if (sock_err != SOCKET_ERROR)
+                            {
+                                printf("Envoi en cours...\n");
+                                sleep(2);
+                                verifywin(num, pjactuel);
+                                *pjactuel = 2;
+                            }
+                            else
+                            {
+                                printf("Erreur de transmission\n");
+                                goto sender;
+                            }
                         }
-                        }else{
-                        printtab();
-                        printf("En attente du joueur %d...\n", *pjactuel);
-                        char buffer2;
-                        if (recv(csock, &buffer2, sizeof(buffer2) , 0) != SOCKET_ERROR) {
-                            system("cls");
-                            int rnum = buffer2-'0';
-                            verifyadd(rnum, &jactuel);
-                            *pjactuel = 1;
-                        }
+                        else
+                        {
+                            printtab();
+                            printf("En attente du joueur %d...\n", *pjactuel);
+                            char buffer2;
+                            if (recv(csock, &buffer2, sizeof(buffer2), 0) != SOCKET_ERROR)
+                            {
+                                system("cls");
+                                int rnum = buffer2 - '0';
+                                verifyadd(rnum, &jactuel);
+                            verifywin(rnum, pjactuel);
+
+                                *pjactuel = 1;
+                            }
                         }
                     }
                     shutdown(csock, 2);
@@ -126,8 +144,10 @@ int tryconnect(int erreur){
             closesocket(sock);
             printf("Fermeture du serveur terminee ! Appuyez sur entree pour continuer.\n");
         }
-            WSACleanup();
-    } else {
+        WSACleanup();
+    }
+    else
+    {
         printf("Erreur de connexion\n");
     }
     getchar();
@@ -156,13 +176,26 @@ void intro()
     printf("\n");
     system("cls");
 }
-void onConnectdone(){
+void onConnectdone()
+{
     printf("Lancons le jeu !\n");
     sleep(1);
     printf("\n");
     printf("\n");
     printf("Creation du tableau de jeu.");
+    fp = fopen("replays/replayS.txt", "w");
     sleep(1);
+}
+void createtab()
+{
+
+    for (int i = 0; i < LIGNES; i++)
+    {
+        for (int j = 0; j < COLONNES; j++)
+        {
+            tab[i][j] = VIDE;
+        }
+    }
 }
 void printtab()
 {
@@ -179,20 +212,26 @@ void printtab()
         printf("%s| %s", BLEU, END);
         for (int j = 0; j < COLONNES; j++)
         {
-        
+
             if (tab[i][j] == 1)
             {
-                printf("| %s%c%s ", ROUGE,48, END);
+                printf("| %s%c%s ", ROUGE, 48, END);
             }
             else if (tab[i][j] == 2)
             {
-                printf("| %s%c%s ", JAUNE,48, END);
-            } else if (tab[i][j]==3){
-                printf("| %s%c%s ", ROUGEW,48, END);
-            } else if (tab[i][j]==4){
-                printf("| %s%c%s ", JAUNEW,48, END);
-            } else {
-                printf("| %s%c%s ", NOIR,32, END);
+                printf("| %s%c%s ", JAUNE, 48, END);
+            }
+            else if (tab[i][j] == 3)
+            {
+                printf("| %s%c%s ", ROUGEW, 48, END);
+            }
+            else if (tab[i][j] == 4)
+            {
+                printf("| %s%c%s ", JAUNEW, 48, END);
+            }
+            else
+            {
+                printf("| %s%c%s ", NOIR, 32, END);
             }
         }
         printf("|\t%s|%s\n", BLEU, END);
@@ -202,31 +241,32 @@ void printtab()
 int turns()
 {
     int colonne;
-    do {
-    printtab();
-    printf("Joueur %d, a vous de jouer !\n", *pjactuel);
-    printf("Dans quelle colonne voulez-vous jouer ? (Entrez 0 pour quitter la partie.)\n");
-    scanf("%d", &colonne);
-    printf("\n");
-    system("cls");
-    if (colonne < 1 || colonne > 7)
+    do
     {
-        printf("%s==========Erreur !==========\n", ROUGE);
-        printf("==>Vous devez entrer un numero de colonne entre 1 et 7.\n");
-        printf("==>Veuillez reessayer.\n");
-        printf("============================%s\n", END);
+        printtab();
+        printf("Joueur %d, a vous de jouer !\n", *pjactuel);
+        printf("Dans quelle colonne voulez-vous jouer ? (Entrez 0 pour quitter la partie.)\n");
+        scanf("%d", &colonne);
         printf("\n");
-        continue;
-    }
+        system("cls");
+        if (colonne < 1 || colonne > 7)
+        {
+            printf("%s==========Erreur !==========\n", ROUGE);
+            printf("==>Vous devez entrer un numero de colonne entre 1 et 7.\n");
+            printf("==>Veuillez reessayer.\n");
+            printf("============================%s\n", END);
+            printf("\n");
+            continue;
+        }
         if (tab[0][colonne - 1] != VIDE)
-            {
-                printf("%s==========Erreur !==========\n", ROUGE);
-                printf("==>Cette colonne est pleine.\n");
-                printf("==>Veuillez reessayer.\n");
-                printf("============================%s\n", END);
-                printf("\n");
-                continue;
-            }
+        {
+            printf("%s==========Erreur !==========\n", ROUGE);
+            printf("==>Cette colonne est pleine.\n");
+            printf("==>Veuillez reessayer.\n");
+            printf("============================%s\n", END);
+            printf("\n");
+            continue;
+        }
     } while (colonne <= 0 || colonne > 7);
     verifyadd(colonne, &jactuel);
     return colonne;
@@ -254,7 +294,7 @@ void verifyadd(int colonne, int *joueur)
                 break;
             }
         }
-        verifywin(colonne, joueur);
+        fprintf(fp, "%d %d\n", jactuel, colonne);
     }
 }
 void verifywin(int colonne, int *joueur)
@@ -280,29 +320,33 @@ void checknull()
 {
     if (tab[0][0] && tab[0][1] && tab[0][2] && tab[0][3] && tab[0][4] && tab[0][5] && tab[0][6])
     {
-        return endgame(NULL, 0);
+        return endgame(NULL, 0, 9);
     }
 }
+
 void checkligne(int *joueur)
 {
     for (int i = 0; i < LIGNES; i++)
     {
         for (int j = 0; j < COLONNES; j++)
         {
-            if (tab[i][j] == tab[i][j + 1] && tab[i][j] == tab[i][j + 2] && tab[i][j] == tab[i][j + 3] && (tab[i][j] == 1 || tab[i][j] == 2))
+            if (tab[i][j] == tab[i][j + 1] && tab[i][j] == tab[i][j + 2] && tab[i][j] == tab[i][j + 3] && (tab[i][j] == 1 || tab[i][j] == 2) && (j + 3 <= 6))
             {
-                if (*joueur == 1) {
-                    tab[i][j]= 3;
-                    tab[i][j + 1]= 3;
-                    tab[i][j + 2]= 3;
-                    tab[i][j + 3]= 3;
-                } else {
-                    tab[i][j]= 4;
-                    tab[i][j + 1]= 4;
-                    tab[i][j + 2]= 4;
-                    tab[i][j + 3]= 4;
+                if (*joueur == 1)
+                {
+                    tab[i][j] = 3;
+                    tab[i][j + 1] = 3;
+                    tab[i][j + 2] = 3;
+                    tab[i][j + 3] = 3;
                 }
-                return endgame(joueur, 1);
+                else
+                {
+                    tab[i][j] = 4;
+                    tab[i][j + 1] = 4;
+                    tab[i][j + 2] = 4;
+                    tab[i][j + 3] = 4;
+                }
+                return endgame(joueur, 1, 1);
             }
         }
     }
@@ -313,20 +357,23 @@ void checkcol(int *joueur)
     {
         for (int j = 0; j < COLONNES; j++)
         {
-            if (tab[i][j] == tab[i + 1][j] && tab[i][j] == tab[i + 2][j] && tab[i][j] == tab[i + 3][j] && (tab[i][j] == 1 || tab[i][j] == 2))
+            if (tab[i][j] == tab[i + 1][j] && tab[i][j] == tab[i + 2][j] && tab[i][j] == tab[i + 3][j] && (tab[i][j] == 1 || tab[i][j] == 2) && (i + 3 <= 6))
             {
-                if (*joueur == 1) {
-                    tab[i][j]= 3;
-                    tab[i + 1][j]= 3;
-                    tab[i + 2][j]= 3;
-                    tab[i + 3][j]= 3;
-                } else {
-                    tab[i][j]= 4;
-                    tab[i + 1][j]= 4;
-                    tab[i + 2][j]= 4;
-                    tab[i + 3][j]= 4;
+                if (*joueur == 1)
+                {
+                    tab[i][j] = 3;
+                    tab[i + 1][j] = 3;
+                    tab[i + 2][j] = 3;
+                    tab[i + 3][j] = 3;
                 }
-                return endgame(joueur, 1);
+                else
+                {
+                    tab[i][j] = 4;
+                    tab[i + 1][j] = 4;
+                    tab[i + 2][j] = 4;
+                    tab[i + 3][j] = 4;
+                }
+                return endgame(joueur, 1, 2);
             }
         }
     }
@@ -337,48 +384,48 @@ void checkdiag(int *joueur)
     {
         for (int j = 0; j < COLONNES; j++)
         {
-            if (tab[i][j] == tab[i + 1][j + 1] && tab[i][j] == tab[i + 2][j + 2] && tab[i][j] == tab[i + 3][j + 3] && (tab[i][j] == 1 || tab[i][j] == 2)) {
-                if (*joueur == 1) {
-                    tab[i][j]= 3;
-                    tab[i + 1][j + 1]= 3;
-                    tab[i + 2][j + 2]= 3;
-                    tab[i + 3][j + 3]= 3;
-                } else {
-                    tab[i][j]= 4;
-                    tab[i + 1][j + 1]= 4;
-                    tab[i + 2][j + 2]= 4;
-                    tab[i + 3][j + 3]= 4;
+            if (tab[i][j] == tab[i + 1][j + 1] && tab[i][j] == tab[i + 2][j + 2] && tab[i][j] == tab[i + 3][j + 3] && (tab[i][j] == 1 || tab[i][j] == 2) &&
+                (i + 3 <= 6 && j + 3 <= 6))
+            {
+                if (*joueur == 1)
+                {
+                    tab[i][j] = 3;
+                    tab[i + 1][j + 1] = 3;
+                    tab[i + 2][j + 2] = 3;
+                    tab[i + 3][j + 3] = 3;
                 }
-                return endgame(joueur, 1);
-            } else if (tab[i][j] == tab[i + 1][j - 1] && tab[i][j] == tab[i + 2][j - 2] && tab[i][j] == tab[i + 3][j - 3] && (tab[i][j] == 1 || tab[i][j] == 2)) {
-                if (*joueur == 1) {
-                    tab[i][j]= 3;
-                    tab[i + 1][j - 1]= 3;
-                    tab[i + 2][j - 2]= 3;
-                    tab[i + 3][j - 3]= 3;
-                } else {
-                    tab[i][j]= 4;
-                    tab[i + 1][j - 1]= 4;
-                    tab[i + 2][j - 2]= 4;
-                    tab[i + 3][j - 3]= 4;
+                else
+                {
+                    tab[i][j] = 4;
+                    tab[i + 1][j + 1] = 4;
+                    tab[i + 2][j + 2] = 4;
+                    tab[i + 3][j + 3] = 4;
                 }
-                return endgame(joueur, 1);
+                return endgame(joueur, 1, 3);
+            }
+            else if (tab[i][j] == tab[i + 1][j - 1] && tab[i][j] == tab[i + 2][j - 2] && tab[i][j] == tab[i + 3][j - 3] && (tab[i][j] == 1 || tab[i][j] == 2) &&
+                     ((i + 3 <= 6 && j - 3 >= 0)))
+            {
+                if (*joueur == 1)
+                {
+                    tab[i][j] = 3;
+                    tab[i + 1][j - 1] = 3;
+                    tab[i + 2][j - 2] = 3;
+                    tab[i + 3][j - 3] = 3;
+                }
+                else
+                {
+                    tab[i][j] = 4;
+                    tab[i + 1][j - 1] = 4;
+                    tab[i + 2][j - 2] = 4;
+                    tab[i + 3][j - 3] = 4;
+                }
+                return endgame(joueur, 1, 4);
             }
         }
     }
 }
-void createtab()
-{
-    
-    for (int i = 0; i < LIGNES; i++)
-    {
-        for (int j = 0; j < COLONNES; j++)
-        {
-            tab[i][j] = VIDE;
-        }
-    }
-}
-void endgame(int *wjoueur, int result)
+void endgame(int *wjoueur, int result, int mode)
 {
     printtab();
     if (result == 0)
@@ -388,7 +435,27 @@ void endgame(int *wjoueur, int result)
     else if (result == 1)
     {
         printf("Le joueur %d a gagne !\n", *wjoueur);
+
+        // -------Debug de la fonction qui a trouvé le gagnant-------
+        // switch (mode)
+        // {
+        // case 1:
+        //     printf("ligne");
+        //     break;
+        // case 2:
+        //     printf("colonne");
+        //     break;
+        // case 3:
+        //     printf("diagonale qui monte vers la droite");
+        //     break;
+        // case 4:
+        //     printf("diagonale qui monte vers la gauche");
+        //     break;
+        // }
+        // -------Debug de la fonction qui a trouvé le gagnant-------
     }
-    int* pended = &ended;
-    *pended = 1;
+    sleep(2);
+    printf("A bientot !\n");
+    fclose(fp);
+    exit(0);
 }
