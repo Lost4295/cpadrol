@@ -571,7 +571,6 @@ int main(int argc, char *argv[])
                         SDL_RenderClear(renderer);
                         loadTableau(renderer);
                         SDL_Delay(50);
-
                         InsertCoin(renderer, nuc, replayfile);
                         SDL_RenderPresent(renderer);
                     }
@@ -828,9 +827,7 @@ int main(int argc, char *argv[])
             print_turn();
             if (fclient && j == 1)
             {
-                SDL_RenderPresent(renderer);
                 int ec = receiveMove(tcpsock);
-
                 SDL_RenderClear(renderer);
                 printtab();
                 loadTableau(renderer);
@@ -839,8 +836,6 @@ int main(int argc, char *argv[])
             }
             else if (fserver && j == 2)
             {
-                SDL_RenderPresent(renderer);
-
                 int ec = receiveMove(tcpsock);
                 SDL_RenderClear(renderer);
                 printtab();

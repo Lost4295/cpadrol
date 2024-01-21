@@ -693,7 +693,7 @@ int printChooseArrow(SDL_Renderer *renderer, int num)
     img_texture = SDL_CreateTextureFromSurface(renderer, image);
     SDL_Rect rect = {num * 50, 6 * 50, 50, 50};
     SDL_RenderCopy(renderer, img_texture, NULL, &rect);
-    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(renderer); //HERE
 }
 
 int createTableau(SDL_Renderer *renderer)
@@ -787,7 +787,6 @@ int createTableau(SDL_Renderer *renderer)
         }
     }
     SDL_Delay(10);
-    SDL_RenderPresent(renderer);
 }
 
 int InsertCoin(SDL_Renderer *renderer, int num, FILE *replayfile)
@@ -1029,9 +1028,8 @@ int loadTableau(SDL_Renderer *renderer)
             checkSecretPions(i, j);
         }
     }
-
     SDL_Delay(10);
-    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(renderer); //HERE
 }
 
 void verifywin(int *joueur)
