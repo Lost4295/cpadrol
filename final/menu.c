@@ -45,7 +45,7 @@ void musicFinishedCallback();
 int replacer(int line, char *value);
 int convertvalue(int v);
 void createConfFile();
-
+int first = 0;
 int main(int argc, char *argv[])
 {
     if (argc == 2 && strcmp(SECRET, argv[1]) == 0)
@@ -105,9 +105,9 @@ int main(int argc, char *argv[])
     SDL_SetWindowMaximumSize(window, 1920, 1080);
     SDL_SetWindowMinimumSize(window, 800, 600);
     DIR *test = opendir("replays");
+    DIR *test2 = opendir("music");
     long int res = findSize("config.txt");
-    // TODO :check si tous les dossiers sont là et sinon les créer
-    if (file_exists("config.txt") && test && res)
+    if (file_exists("config.txt") && test && res > 15 && test2)
     {
         fconfig = 0;
         fmenu = 1;
@@ -145,6 +145,12 @@ int main(int argc, char *argv[])
     }
     else
     {
+        if (!test2)
+        {
+            printf("Music folder not found.\n");
+            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Music folder not found", "The music folder was not found.\nPlease create a folder named \"music\" in the same directory as the executable.\nThen, put your music files in it.\nYou can find some music files in the \"music\" folder of the project.", NULL);
+            goto Quit;
+        }
         fconfig = 1;
         fmenu = 0;
         int dir = mkdir("replays", 777);
@@ -175,6 +181,7 @@ int main(int argc, char *argv[])
         setWindowColor(renderer, black_color);
         print_pseudo_maker(font, renderer, " ");
     }
+    chmod("replays",0777);
     SDL_Event event;
     SDL_bool quit = SDL_FALSE;
     SDL_bool resized = SDL_FALSE;
@@ -319,24 +326,6 @@ int main(int argc, char *argv[])
                         printChooseArrow(renderer, nuc);
                     }
                     break;
-                case SDLK_s: // à enlever
-                    FILE *file = fopen("config.txt", "r");
-                    char line[250];
-                    char texte[250];
-                    int lc = 0;
-                    while (fgets(line, sizeof(line), file) != NULL)
-                    {
-                        printf("Settings file :\nLine %d :\n", lc);
-                        char d[] = ":";
-                        char n[] = "\n";
-                        printf("Content : '%s'\n", line);
-                        char *p = strtok(line, d);
-                        printf("Key : %s\n", p);
-                        p = strtok(NULL, d);
-                        char *ps = strtok(p, n);
-                        printf("Value : '%s'\n", ps);
-                    }
-                    break;
                 case SDLK_ESCAPE:
                     if (fmenu)
                     {
@@ -442,94 +431,6 @@ int main(int argc, char *argv[])
                         print_menu_opts(font, renderer, num);
                     }
                     break;
-                case SDLK_f: // à enlever
-                    printf("Flags :");
-                    if (fmenu)
-                    {
-                        printf(" fmenu");
-                    }
-                    if (fsettings)
-                    {
-                        printf(" fsettings");
-                    }
-                    if (fmreplay)
-                    {
-                        printf(" fmreplay");
-                    }
-                    if (fmplay)
-                    {
-                        printf(" fmplay");
-                    }
-                    if (fplay)
-                    {
-                        printf(" fplay");
-                    }
-                    if (flocal)
-                    {
-                        printf(" flocal");
-                    }
-                    if (fconfig)
-                    {
-                        printf(" fconfig");
-                    }
-                    if (fserver)
-                    {
-                        printf(" fserver");
-                    }
-                    if (fclient)
-                    {
-                        printf(" fclient");
-                    }
-                    if (freplay)
-                    {
-                        printf(" freplay");
-                    }
-                    if (fauto)
-                    {
-                        printf(" fauto");
-                    }
-                    if (ended)
-                    {
-                        printf(" ended");
-                    }
-                    if (fchmusic)
-                    {
-                        printf(" fchmusic");
-                    }
-                    if (fmauto)
-                    {
-                        printf(" fmauto");
-                    }
-                    if (floop)
-                    {
-                        printf(" floop");
-                    }
-                    if (fmute)
-                    {
-                        printf(" fmute");
-                    }
-                    if (secret)
-                    {
-                        printf(" secret");
-                    }
-                    printf("\n");
-                    printf("Variables :");
-                    printf(" num = %d", num);
-                    printf(" nus = %d", nus);
-                    printf(" nup = %d", nup);
-                    printf(" nur = %d", nur);
-                    printf(" nuc = %d", nuc);
-                    printf("numm = %d", numm);
-                    printf(" j = %d", j);
-                    printf("colorR = %d", colorR);
-                    printf(" colorG = %d", colorG);
-                    printf(" colorB = %d", colorB);
-                    printf(" colorA = %d", colorA);
-                    printf(" pj = %d", j);
-                    printf(" maxfiles = %d", maxfiles);
-                    printf("\n");
-                    printf("\n");
-                    break;
                 case SDLK_RETURN:
                     if (fconfig)
                     {
@@ -620,9 +521,7 @@ int main(int argc, char *argv[])
                             printText(font, renderer, white_color, "Donnez cette adresse IP à votre adversaire !", &rectt, black_color);
                             SDL_RenderPresent(renderer);
 
-
                             tcpsock = createServer();
-
 
                             fplay = 1;
                             SDL_RenderClear(renderer);
@@ -743,37 +642,6 @@ int main(int argc, char *argv[])
                         SDL_Delay(50);
                         sendMove(tcpsock, nuc);
 
-                        #ifdef _WIN32
-
-                        //    buffer = nuc + '0';
-                        // senders:
-                        //    if (send(sock, &buffer, sizeof(buffer), 0) == SOCKET_ERROR)
-                        //    {
-                        //        printf("Erreur de transmission\n");
-                        //        sendErrNum++;
-                        //        if (sendErrNum < 5)
-                        //        {
-                        //            goto senders;
-                        //        }
-                        //        else
-                        //        {
-                        //            printf("Connexion perdue.");
-                        //            closesocket(sock);
-                        //            SDL_Rect recter;
-                        //            recter.x = 400;
-                        //            recter.y = 50;
-                        //            printText(font, renderer, red_color, "La connexion a ete perdue.", &recter, black_color);
-                        //            SDL_Delay(2000);
-                        //            fplay = 0;
-                        //            fmenu = 1;
-                        //            j = 1;
-                        //            fclient = 0;
-                        //            fserver = 0;
-                        //        }
-                        //    }
-                        
-                        #endif
-
                         InsertCoin(renderer, nuc, replayfile);
                         SDL_RenderPresent(renderer);
                     }
@@ -852,7 +720,7 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        if (event.type == SDL_WINDOWEVENT)
+        else if (event.type == SDL_WINDOWEVENT)
         {
             switch (event.window.event)
             {
@@ -875,7 +743,6 @@ int main(int argc, char *argv[])
                 reprint(renderer);
             }
         }
-
         else if (event.type == SDL_MOUSEMOTION)
         {
             const SDL_Point pt = {event.motion.x, event.motion.y};
@@ -921,32 +788,6 @@ int main(int argc, char *argv[])
                 print_color();
             }
         }
-        if (fplay && !ended && (fclient || fserver))
-        {
-            print_turn();
-            if (fclient && j == 1)
-            {
-                SDL_RenderPresent(renderer);
-                int ec = receiveMove(tcpsock);
-                
-                SDL_RenderClear(renderer);
-                printtab();
-                loadTableau(renderer);
-                InsertCoin(renderer, ec, replayfile);
-                SDL_RenderPresent(renderer);
-            }
-            else if (fserver && j == 2)
-            {
-                SDL_RenderPresent(renderer);
-                
-                int ec = receiveMove(tcpsock);
-                SDL_RenderClear(renderer);
-                printtab();
-                loadTableau(renderer);
-                InsertCoin(renderer, ec, replayfile);
-                SDL_RenderPresent(renderer);
-            }
-        }
         if (renderText)
         {
             // Text is not empty
@@ -982,6 +823,32 @@ int main(int argc, char *argv[])
                 }
             }
         }
+        if (fplay && !ended && (fclient || fserver))
+        {
+            print_turn();
+            if (fclient && j == 1)
+            {
+                SDL_RenderPresent(renderer);
+                int ec = receiveMove(tcpsock);
+
+                SDL_RenderClear(renderer);
+                printtab();
+                loadTableau(renderer);
+                InsertCoin(renderer, ec, replayfile);
+                SDL_RenderPresent(renderer);
+            }
+            else if (fserver && j == 2)
+            {
+                SDL_RenderPresent(renderer);
+
+                int ec = receiveMove(tcpsock);
+                SDL_RenderClear(renderer);
+                printtab();
+                loadTableau(renderer);
+                InsertCoin(renderer, ec, replayfile);
+                SDL_RenderPresent(renderer);
+            }
+        }
         SDL_Delay(20);
     }
     statut = EXIT_SUCCESS;
@@ -1013,3 +880,4 @@ Quit:
     actsound = NULL;
     return statut;
 }
+

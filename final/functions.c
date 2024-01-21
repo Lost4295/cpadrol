@@ -227,7 +227,7 @@ void print_bg()
     SDL_RenderClear(renderer);
     if (secret)
     {
-        SDL_Surface *image = IMG_Load("image.jpeg");
+        SDL_Surface *image = IMG_Load("images/image.jpeg");
         SDL_Texture *img_texture = NULL;
         if (!image)
         {
@@ -282,15 +282,15 @@ int init(SDL_Window **window, SDL_Renderer **renderer, int w, int h)
         fprintf(stderr, "SDLNet_Init: %s\n", SDLNet_GetError());
         exit(EXIT_FAILURE);
     }
-    font = TTF_OpenFont("Roboto.ttf", 32);
-    lfont = TTF_OpenFont("Roboto.ttf", 18);
-    tfont = TTF_OpenFont("Roboto.ttf", 50);
+    font = TTF_OpenFont("fonts/Roboto.ttf", 32);
+    lfont = TTF_OpenFont("fonts/Roboto.ttf", 18);
+    tfont = TTF_OpenFont("fonts/Roboto.ttf", 50);
     if (!font || !lfont || !tfont)
     {
         printf("Error loading bgfont: %s\n", TTF_GetError());
         return -1;
     }
-    SDL_Surface *image = IMG_Load("p.jpg");
+    SDL_Surface *image = IMG_Load("images/p.jpg");
     SDL_Texture *img_texture = NULL;
     if (!image)
     {
@@ -450,7 +450,7 @@ void print_play_opts(TTF_Font *font, SDL_Renderer *renderer, int num)
 void print_settings_opts(TTF_Font *font, SDL_Renderer *renderer, int num)
 {
     SDL_RenderClear(renderer);
-    SDL_Surface *image = IMG_Load("p.jpg");
+    SDL_Surface *image = IMG_Load("images/p.jpg");
     SDL_Texture *img_texture = NULL;
     if (!image)
     {
@@ -684,11 +684,11 @@ int SDL_RenderFillCircle(SDL_Renderer *renderer, int x, int y, int radius)
 
 int printChooseArrow(SDL_Renderer *renderer, int num)
 {
-    SDL_Surface *image = IMG_Load("arrow.png");
+    SDL_Surface *image = IMG_Load("images/arrow.png");
     SDL_Texture *img_texture = NULL;
     if (!image)
     {
-        printf("Erreur de chargement de l'image : %s", SDL_GetError());
+        printf("Erreur de chargement de l'image : %s\n cwd = %s\n", SDL_GetError(), getcwd(NULL, 0));
     }
     img_texture = SDL_CreateTextureFromSurface(renderer, image);
     SDL_Rect rect = {num * 50, 6 * 50, 50, 50};
@@ -843,7 +843,7 @@ void checkSecretPions(int i, int j)
     if ((fsy && tableau[i][j] == 1) || (fsy && tableau[i][j] == 3)
         /*|| (strcmp("Ylan",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
     {
-        SDL_Surface *image = IMG_Load("ylan.png");
+        SDL_Surface *image = IMG_Load("images/ylan.png");
         SDL_Texture *img_texture = NULL;
         if (!image)
         {
@@ -858,7 +858,7 @@ void checkSecretPions(int i, int j)
     if ((fsm && tableau[i][j] == 1) || (fsm && tableau[i][j] == 3)
         /*|| (strcmp("Mathis",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
     {
-        SDL_Surface *image = IMG_Load("mathis.png");
+        SDL_Surface *image = IMG_Load("images/mathis.png");
         SDL_Texture *img_texture = NULL;
         if (!image)
         {
@@ -874,7 +874,7 @@ void checkSecretPions(int i, int j)
     if ((fsz && tableau[i][j] == 1) || (fsz && tableau[i][j] == 3)
         /*|| (strcmp("Zacharie",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
     {
-        SDL_Surface *image = IMG_Load("zacharie.png");
+        SDL_Surface *image = IMG_Load("images/zacharie.png");
         SDL_Texture *img_texture = NULL;
         if (!image)
         {
@@ -1432,7 +1432,7 @@ void print_replay_title()
 void print_files(TTF_Font *font, SDL_Renderer *renderer, int num)
 {
     SDL_RenderClear(renderer);
-    SDL_Surface *image = IMG_Load("images.jpeg");
+    SDL_Surface *image = IMG_Load("images/images.jpeg");
     SDL_Texture *img_texture = NULL;
     if (!image)
     {
@@ -1830,14 +1830,18 @@ void createReplay()
     printf("Writing file\n");
     char filename[250];
     int i = 1;
-    chdir("replays");
     bool createit = false;
-    strcpy(filename, "replay1.txt");
+    strcpy(filename, "replays/replay1.txt");
     do
     {
         if (!file_exists(filename))
         {
             replayfile = fopen(filename, "w");
+            if (replayfile == NULL)
+            {
+                printf("Error opening file!\n");
+                exit(1);
+            }
             printf("File %s created.\n", filename);
         }
         else
@@ -1846,11 +1850,18 @@ void createReplay()
             createit = true;
         }
         i++;
-        sprintf(filename, "replay%d.txt", i);
+
+        sprintf(filename, "replays/replay%d.txt", i);
+
     } while (file_exists(filename));
     if (createit)
     {
         replayfile = fopen(filename, "w");
+        if (replayfile == NULL)
+        {
+            printf("Error opening file!\n");
+            exit(1);
+        }
         printf("File %s created.\n", filename);
     }
     if (flocal)
@@ -1864,36 +1875,16 @@ void createReplay()
         if (fserver)
         {
 
-#ifdef _WIN32
 
-            if (send(sock, player1ps, sizeof(player1ps), 0) != SOCKET_ERROR)
-            {
-                printf("Sent : %s\n", player1ps);
-                recv(sock, player2ps, sizeof(player2ps), 0);
-                printf("Received : %s\n", player2ps);
-            }
-
-#endif
 //TODO à compléter
         }
         else
         {
 
-#ifdef _WIN32
-
-            if (recv(sock, player2ps, sizeof(player2ps), 0) != SOCKET_ERROR)
-            {
-                printf("Received : %s\n", player2ps);
-                send(sock, player1ps, sizeof(player1ps), 0);
-                printf("Sent : %s\n", player1ps);
-            }
-
-#endif
 
         }
         fprintf(replayfile, "%s -%s\n", player1ps, player2ps);
     }
-    chdir("../");
 }
 
 void closereplay()
@@ -1956,7 +1947,13 @@ void reprint(SDL_Renderer *renderer)
     }
     else if (fconfig)
     {
-        print_pseudo_maker(font, renderer, inputText);
+        if (strlen(inputText) > 0)
+        {
+            print_pseudo_maker(font, renderer, inputText);
+        } else {
+            print_pseudo_maker(font, renderer, " ");
+        }
+        
     }
     else if (freplay)
     {
