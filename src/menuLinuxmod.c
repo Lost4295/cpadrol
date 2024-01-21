@@ -43,9 +43,15 @@ int main(void)
                 (select == 4) ? select = 0 : select++;
                 clear();
                 break;
+            case 27:
+                end:
+                endwin();
+                exit = 1;
+                break;
+            default:
+                break;
             }
-        }
-        else
+        } else {
             switch(option) {
                 case 10:
                 printw("Option selected : %s\n\n", *options[select]);
@@ -73,19 +79,13 @@ int main(void)
                         break;
                     default:
                         break;
-                    }
-                break;
-                case 27:
-                    end:
-                    endwin();
-                    exit = 1;
-                    break;
-                default:
-                    break;
                 }
+                break;
             }
-    endwin();
-    return 0;
+        } 
+        endwin();
+        return 0;
+    }
 }
 
 void choices(int choix) {
