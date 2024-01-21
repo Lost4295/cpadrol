@@ -41,9 +41,7 @@ void print_files(TTF_Font *font, SDL_Renderer *renderer, int num);
 void replayGame(int num);
 void print_ask_auto();
 void musicFinishedCallback();
-SOCKET tryconnectc(char *ip);
-SOCKET tryconnects();
-void closesock(SOCKET sock);
+
 int replacer(int line, char *value);
 int convertvalue(int v);
 void createConfFile();
@@ -622,7 +620,10 @@ int main(int argc, char *argv[])
                             printText(font, renderer, white_color, "Donnez cette adresse IP à votre adversaire !", &rectt, black_color);
                             SDL_RenderPresent(renderer);
 
+
                             tcpsock = createServer();
+
+
                             fplay = 1;
                             SDL_RenderClear(renderer);
                             createtab();
@@ -730,6 +731,7 @@ int main(int argc, char *argv[])
                         SDL_RenderClear(renderer);
                         loadTableau(renderer);
                         SDL_Delay(50);
+
                         sendMove(tcpsock, nuc);
                         InsertCoin(renderer, nuc, replayfile);
                         SDL_RenderPresent(renderer);
@@ -740,7 +742,9 @@ int main(int argc, char *argv[])
                         loadTableau(renderer);
                         SDL_Delay(50);
                         sendMove(tcpsock, nuc);
-                        // TODO erase
+
+                        #ifdef _WIN32
+
                         //    buffer = nuc + '0';
                         // senders:
                         //    if (send(sock, &buffer, sizeof(buffer), 0) == SOCKET_ERROR)
@@ -767,7 +771,9 @@ int main(int argc, char *argv[])
                         //            fserver = 0;
                         //        }
                         //    }
-                        // TODO enderase
+                        
+                        #endif
+
                         InsertCoin(renderer, nuc, replayfile);
                         SDL_RenderPresent(renderer);
                     }
@@ -918,80 +924,27 @@ int main(int argc, char *argv[])
         if (fplay && !ended && (fclient || fserver))
         {
             print_turn();
-            printf("En attente du joueur %d...\n", *pj);
             if (fclient && j == 1)
             {
                 SDL_RenderPresent(renderer);
                 int ec = receiveMove(tcpsock);
+                
                 SDL_RenderClear(renderer);
                 printtab();
                 loadTableau(renderer);
                 InsertCoin(renderer, ec, replayfile);
                 SDL_RenderPresent(renderer);
-                // TODO erase
-                // char cbuffer;
-                // int ec;
-                // ec = recv(sock, &cbuffer, sizeof(cbuffer), 0);
-                // if (ec != SOCKET_ERROR)
-                //{
-                //    int rnum = cbuffer - '0';
-                //    InsertCoin(renderer, rnum, replayfile);
-                //    SDL_RenderPresent(renderer);
-                //}
-                // else if (ec == 0 || ec == SOCKET_ERROR)
-                //{
-                //    printf("Connexion perdue.");
-                //    closesocket(sock);
-                //    SDL_Rect recter;
-                //    recter.x = 400;
-                //    recter.y = 50;
-                //    printText(font, renderer, red_color, "La connexion a ete perdue.", &recter, black_color);
-                //    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Connexion perdue", "La connexion a ete perdue!", NULL);
-                //    SDL_Delay(2000);
-                //    fplay = 0;
-                //    fmenu = 1;
-                //    j = 1;
-                //    fclient = 0;
-                //    fserver = 0;
-                //}
-                // TODO enderase
             }
             else if (fserver && j == 2)
             {
                 SDL_RenderPresent(renderer);
+                
                 int ec = receiveMove(tcpsock);
                 SDL_RenderClear(renderer);
                 printtab();
                 loadTableau(renderer);
                 InsertCoin(renderer, ec, replayfile);
                 SDL_RenderPresent(renderer);
-                // TODO erase
-                // char buffer2;
-                // int ec;
-                // ec = recv(sock, &buffer2, sizeof(buffer2), 0);
-                // if (ec != SOCKET_ERROR)
-                //{
-                //    int rnum = buffer2 - '0';
-                //    InsertCoin(renderer, rnum, replayfile);
-                //    SDL_RenderPresent(renderer);
-                //}
-                // else if (ec == 0 || ec == SOCKET_ERROR)
-                //{
-                //    printf("Connexion perdue.");
-                //    closesocket(sock);
-                //    SDL_Rect recter;
-                //    recter.x = 400;
-                //    recter.y = 50;
-                //    printText(font, renderer, red_color, "La connexion a ete perdue.", &recter, black_color);
-                //    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Connexion perdue", "La connexion a ete perdue!", NULL);
-                //    SDL_Delay(2000);
-                //    fplay = 0;
-                //    fmenu = 1;
-                //    j = 1;
-                //    fclient = 0;
-                //    fserver = 0;
-                //}
-                // TODO enderase
             }
         }
         if (renderText)

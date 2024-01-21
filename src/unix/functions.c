@@ -14,18 +14,6 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h> /* gethostbyname */
-#define INVALID_SOCKET -1
-#define SOCKET_ERROR -1
-#define closesocket(s) close(s)
-typedef int SOCKET;
-typedef struct sockaddr_in SOCKADDR_IN;
-typedef struct sockaddr SOCKADDR;
-typedef struct in_addr IN_ADDR;
 #define IP_BUFFER_LEN 100
 #define BUFFER_SIZE 1000
 #define MUSIC 2
@@ -44,7 +32,8 @@ int colorA = 145;
 #define SECRET "Zach"
 #define ID_SIZE 20
 #define IP_SIZE 16
-typedef struct User {
+typedef struct User
+{
     char name[100];
     char id[ID_SIZE];
     char ip[IP_SIZE];
@@ -375,11 +364,13 @@ void printText(TTF_Font *font, SDL_Renderer *renderer, SDL_Color color, char *te
     SDL_RenderCopy(renderer, bgtext_texture, NULL, &destbg);
     SDL_RenderCopy(renderer, text_texture, NULL, &destn);
 }
+
 void print_main_title()
 {
     printText(tfont, renderer, black_color, "Puissance 4", &title, white_color);
     SDL_RenderPresent(renderer);
 }
+
 void print_menu_opts(TTF_Font *font, SDL_Renderer *renderer, int num)
 {
     print_bg();
@@ -531,6 +522,7 @@ void print_ip_renderer(TTF_Font *font, SDL_Renderer *renderer, char *texte)
     printText(font, renderer, white_color, texte, &rects[1], black_color);
     SDL_RenderPresent(renderer);
 }
+
 void loadSounds()
 {
     sound1 = Mix_LoadWAV("music/n/coin1.wav");
@@ -545,6 +537,7 @@ void loadSounds()
         printf("Error loading sounds: %s\n", Mix_GetError());
     }
 }
+
 void get_user_vars(TTF_Font *font, SDL_Renderer *renderer)
 {
     SDL_Rect rect;
@@ -843,55 +836,58 @@ int InsertCoin(SDL_Renderer *renderer, int num, FILE *replayfile)
     (*pj == 1) ? (*pj = 2) : (*pj = 1);
     print_turn();
 }
-void checkSecretPions(int i, int j){
-SDL_Rect rct = {j * 50+7, i * 50+7, 35, 35};
-if ((fsy && tableau[i][j] == 1) || (fsy && tableau[i][j] == 3)
-                /*|| (strcmp("Ylan",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
-            {
-                SDL_Surface *image = IMG_Load("ylan.png");
-                SDL_Texture *img_texture = NULL;
-                if (!image)
-                {
-                    printf("Erreur de chargement de l'image : %s", SDL_GetError());
-                    return -1;
-                }
-                img_texture = SDL_CreateTextureFromSurface(renderer, image);
-                SDL_RenderCopy(renderer, img_texture, NULL, &rct);
-                SDL_DestroyTexture(img_texture);
-                SDL_FreeSurface(image);
-            }
-            if ((fsm && tableau[i][j] == 1) || (fsm && tableau[i][j] == 3)
-                /*|| (strcmp("Mathis",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
-            {
-                SDL_Surface *image = IMG_Load("mathis.png");
-                SDL_Texture *img_texture = NULL;
-                if (!image)
-                {
-                    printf("Erreur de chargement de l'image : %s", SDL_GetError());
-                    return -1;
-                }
 
-                img_texture = SDL_CreateTextureFromSurface(renderer, image);
-                SDL_RenderCopy(renderer, img_texture, NULL, &rct);
-                SDL_DestroyTexture(img_texture);
-                SDL_FreeSurface(image);
-            }
-            if ((fsz && tableau[i][j] == 1) || (fsz && tableau[i][j] == 3)
-                /*|| (strcmp("Zacharie",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
-            {
-                SDL_Surface *image = IMG_Load("zacharie.png");
-                SDL_Texture *img_texture = NULL;
-                if (!image)
-                {
-                    printf("Erreur de chargement de l'image : %s", SDL_GetError());
-                    return -1;
-                }
-                img_texture = SDL_CreateTextureFromSurface(renderer, image);
-                SDL_RenderCopy(renderer, img_texture, NULL, &rct);
-                SDL_DestroyTexture(img_texture);
-                SDL_FreeSurface(image);
-            }
+void checkSecretPions(int i, int j)
+{ //TODO quand pseudo sera ok
+    SDL_Rect rct = {j * 50 + 7, i * 50 + 7, 35, 35};
+    if ((fsy && tableau[i][j] == 1) || (fsy && tableau[i][j] == 3)
+        /*|| (strcmp("Ylan",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
+    {
+        SDL_Surface *image = IMG_Load("ylan.png");
+        SDL_Texture *img_texture = NULL;
+        if (!image)
+        {
+            printf("Erreur de chargement de l'image : %s", SDL_GetError());
+            return -1;
+        }
+        img_texture = SDL_CreateTextureFromSurface(renderer, image);
+        SDL_RenderCopy(renderer, img_texture, NULL, &rct);
+        SDL_DestroyTexture(img_texture);
+        SDL_FreeSurface(image);
+    }
+    if ((fsm && tableau[i][j] == 1) || (fsm && tableau[i][j] == 3)
+        /*|| (strcmp("Mathis",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
+    {
+        SDL_Surface *image = IMG_Load("mathis.png");
+        SDL_Texture *img_texture = NULL;
+        if (!image)
+        {
+            printf("Erreur de chargement de l'image : %s", SDL_GetError());
+            return -1;
+        }
+
+        img_texture = SDL_CreateTextureFromSurface(renderer, image);
+        SDL_RenderCopy(renderer, img_texture, NULL, &rct);
+        SDL_DestroyTexture(img_texture);
+        SDL_FreeSurface(image);
+    }
+    if ((fsz && tableau[i][j] == 1) || (fsz && tableau[i][j] == 3)
+        /*|| (strcmp("Zacharie",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
+    {
+        SDL_Surface *image = IMG_Load("zacharie.png");
+        SDL_Texture *img_texture = NULL;
+        if (!image)
+        {
+            printf("Erreur de chargement de l'image : %s", SDL_GetError());
+            return -1;
+        }
+        img_texture = SDL_CreateTextureFromSurface(renderer, image);
+        SDL_RenderCopy(renderer, img_texture, NULL, &rct);
+        SDL_DestroyTexture(img_texture);
+        SDL_FreeSurface(image);
+    }
 }
+
 void print_turn()
 {
     if (!ended)
@@ -1029,8 +1025,8 @@ int loadTableau(SDL_Renderer *renderer)
                 SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
             }
             SDL_RenderFillCircle(renderer, j * 50 + 25, i * 50 + 25, 20);
-            
-            checkSecretPions(i,j);
+
+            checkSecretPions(i, j);
         }
     }
 
@@ -1757,92 +1753,6 @@ int replacer(int line, char *wrline)
     printf("\nSuccessfully replaced '%d' line with '%s'.\n", line, printline);
     return 0;
 }
-SOCKET tryconnects()
-{
-    SOCKADDR_IN sin = {0};
-    SOCKET sock;
-    SOCKET csock;
-    SOCKADDR_IN csin;
-
-    socklen_t recsize = sizeof(csin);
-    int sock_err;
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    /* Si la socket est valide */
-    if (sock == INVALID_SOCKET)
-    {
-        printf("Erreur de creation de la socket serveur\n");
-        return EXIT_FAILURE;
-    }
-    printf("La socket %d est maintenant ouverte en mode TCP/IP\n", sock);
-    /* Configuration */
-    sin.sin_addr.s_addr = INADDR_ANY; /* Adresse IP automatique */
-    sin.sin_family = AF_INET;         /* Protocole familial (IP) */
-    sin.sin_port = htons(PORT);       /* Listage du port */
-    sock_err = bind(sock, (SOCKADDR *)&sin, sizeof(sin));
-    /* Si la socket fonctionne */
-    if (sock_err == SOCKET_ERROR)
-    {
-        printf("Errno bind(): %d : %s\n", errno, strerror((errno)));
-        perror("Perror bind()");
-    }
-    /* Démarrage du listage (mode server) */
-    sock_err = listen(sock, 5);
-    printf("Tentative de connexion au client du port %d...\n", PORT);
-    /* Si la socket fonctionne */
-    if (sock_err == SOCKET_ERROR)
-    {
-        printf("Errno listen(): %d : %s\n", errno, strerror((errno)));
-        perror("Perror listen()");
-        ;
-    }
-    /* Attente pendant laquelle le client se connecte */
-    printf("Patientez pendant que le client se connecte sur le port %d...\n", PORT);
-    csock = accept(sock, (SOCKADDR *)&csin, &recsize);
-    if (csock == INVALID_SOCKET)
-    {
-        printf("Erreur lors de l'acceptation de la connexion du client.\n");
-        closesocket(sock);
-        return EXIT_FAILURE;
-    }
-    printf("Un client se connecte avec la socket %d de %s:%d\n", csock, inet_ntoa(csin.sin_addr), htons(csin.sin_port));
-    sleep(1);
-    createtab();
-    printtab();
-    return csock;
-}
-
-SOCKET tryconnectc(char *ip)
-{
-    SOCKET sock;
-    SOCKADDR_IN sin;
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    /* Si la socket est valide */
-    if (sock == INVALID_SOCKET)
-    {
-        printf("Impossible de creer la socket client\n");
-        sleep(2);
-    }
-
-    printf("La socket %d est maintenant ouverte en mode TCP/IP\n", sock);
-    /* Configuration */
-    sin.sin_addr.s_addr = inet_addr(ip); /* Adresse IP automatique */
-    sin.sin_family = AF_INET;            /* Protocole familial (IP) */
-    sin.sin_port = htons(PORT);          /* Listage du port */
-
-    if (connect(sock, (SOCKADDR *)&sin, sizeof(sin)) == SOCKET_ERROR)
-    {
-        printf("La connexion au serveur a echoue.\n");
-        printf("Fermeture de la socket...\n");
-        closesocket(sock);
-        sleep(2);
-    }
-    printf("Connection a %s sur le port %d\n", inet_ntoa(sin.sin_addr), htons(sin.sin_port));
-    sleep(1);
-    createtab();
-    system("cls");
-    printtab();
-    return sock;
-}
 
 int convertvalue(int v)
 {
@@ -1883,6 +1793,7 @@ void print_color()
     colorB = convertvalue((int)SDL_round(color_slider_value3 * 100.0f));
     colorA = convertvalue((int)SDL_round(color_slider_value4 * 100.0f));
 }
+
 void createConfFile()
 {
     FILE *fptr;
@@ -1952,25 +1863,33 @@ void createReplay()
         char player2ps[100];
         if (fserver)
         {
-            // TODO erase
-            // if (send(sock, player1ps, sizeof(player1ps), 0) != SOCKET_ERROR)
-            //{
-            //     printf("Sent : %s\n", player1ps);
-            //     recv(sock, player2ps, sizeof(player2ps), 0);
-            //     printf("Received : %s\n", player2ps);
-            // }
-            // TODO Enderase
+
+#ifdef _WIN32
+
+            if (send(sock, player1ps, sizeof(player1ps), 0) != SOCKET_ERROR)
+            {
+                printf("Sent : %s\n", player1ps);
+                recv(sock, player2ps, sizeof(player2ps), 0);
+                printf("Received : %s\n", player2ps);
+            }
+
+#endif
+//TODO à compléter
         }
         else
         {
-            // TODO erase
-            // if (recv(sock, player2ps, sizeof(player2ps), 0) != SOCKET_ERROR)
-            // {
-            //    printf("Received : %s\n", player2ps);
-            //    send(sock, player1ps, sizeof(player1ps), 0);
-            //    printf("Sent : %s\n", player1ps);
-            // }
-            // TODO Enderase
+
+#ifdef _WIN32
+
+            if (recv(sock, player2ps, sizeof(player2ps), 0) != SOCKET_ERROR)
+            {
+                printf("Received : %s\n", player2ps);
+                send(sock, player1ps, sizeof(player1ps), 0);
+                printf("Sent : %s\n", player1ps);
+            }
+
+#endif
+
         }
         fprintf(replayfile, "%s -%s\n", player1ps, player2ps);
     }
@@ -2009,17 +1928,7 @@ Mix_Chunk *chooseRandSound()
 
 void reprint(SDL_Renderer *renderer)
 {
-    if (flocal)
-    {
-        loadTableau(renderer);
-        print_turn();
-    }
-    else if (fserver)
-    {
-        loadTableau(renderer);
-        print_turn();
-    }
-    else if (fclient)
+    if (flocal || fserver || fclient || fplay)
     {
         loadTableau(renderer);
         print_turn();
@@ -2045,11 +1954,6 @@ void reprint(SDL_Renderer *renderer)
     {
         print_menu_opts(font, renderer, num);
     }
-    else if (fplay)
-    {
-        loadTableau(renderer);
-        print_turn();
-    }
     else if (fconfig)
     {
         print_pseudo_maker(font, renderer, inputText);
@@ -2068,6 +1972,7 @@ void reprint(SDL_Renderer *renderer)
     }
     SDL_RenderPresent(renderer);
 }
+
 TCPsocket createServer()
 {
     IPaddress ip;
@@ -2096,7 +2001,6 @@ TCPsocket createServer()
             printf("Connexion établie.\n");
             break;
         }
-
         SDL_Delay(100); // Attente de 100 ms
     }
 
@@ -2141,8 +2045,8 @@ int receiveMove(TCPsocket socket)
     return SDLNet_Read32(&netCol);
 }
 
-//int showMenu();
-//TODO Ajouter ça
+// int showMenu();
+// TODO Ajouter ça
 
 //    generateUniqueId(uniqueId);
 //
@@ -2199,102 +2103,102 @@ int receiveMove(TCPsocket socket)
 //}
 //
 //// Fonction pour gérer les erreurs
-//void handleError(const char *message) {
-//    printf("%s: %d\n", message, WSAGetLastError());
-//    exit(1);
-//}
+// void handleError(const char *message) {
+//     printf("%s: %d\n", message, WSAGetLastError());
+//     exit(1);
+// }
 //
 //// Fonction pour générer un identifiant unique
-//void generateUniqueId(char *id) {
-//    srand(time(NULL)); // Initialisation du générateur aléatoire
-//    sprintf(id, "%d-%d", time(NULL), rand()); // Création de l'ID unique
-//}
+// void generateUniqueId(char *id) {
+//     srand(time(NULL)); // Initialisation du générateur aléatoire
+//     sprintf(id, "%d-%d", time(NULL), rand()); // Création de l'ID unique
+// }
 //
 //// Fonction pour mettre à jour la liste des utilisateurs
-//void updateUser(User **head, char *name, char *id, char *ip) {
-//    User *newUser = (User *)malloc(sizeof(User));
-//    strcpy(newUser->name, name);
-//    strcpy(newUser->id, id);
-//    strcpy(newUser->ip, ip);
-//    newUser->next = *head;
-//    *head = newUser;
-//}
+// void updateUser(User **head, char *name, char *id, char *ip) {
+//     User *newUser = (User *)malloc(sizeof(User));
+//     strcpy(newUser->name, name);
+//     strcpy(newUser->id, id);
+//     strcpy(newUser->ip, ip);
+//     newUser->next = *head;
+//     *head = newUser;
+// }
 //
 //// Fonction pour afficher la liste des utilisateurs
-//void displayUsers(const User *head, int *userCount) {
-//    system("cls"); // Nettoyage de la console
-//    int count = 1;
-//    const User *current = head;
-//    while (current != NULL) {
-//        printf("%d. %s [%s]\n", count++, current->name, current->ip);
-//        current = current->next;
-//    }
-//    *userCount = count;
-//}
+// void displayUsers(const User *head, int *userCount) {
+//     system("cls"); // Nettoyage de la console
+//     int count = 1;
+//     const User *current = head;
+//     while (current != NULL) {
+//         printf("%d. %s [%s]\n", count++, current->name, current->ip);
+//         current = current->next;
+//     }
+//     *userCount = count;
+// }
 //
 //// Fonction pour vider la liste des utilisateurs
-//void clearUserList(User **head) {
-//    User *current = *head;
-//    while (current != NULL) {
-//        User *next = current->next;
-//        free(current);
-//        current = next;
-//    }
-//    *head = NULL;
-//}
+// void clearUserList(User **head) {
+//     User *current = *head;
+//     while (current != NULL) {
+//         User *next = current->next;
+//         free(current);
+//         current = next;
+//     }
+//     *head = NULL;
+// }
 //
 //// Fonction pour afficher le menu principal
-//int showMenu() {
-//    int choice;
-//    printf("\nMenu:\n");
-//    printf("1. Chercher des joueurs\n");
-//    printf("2. Fermer le programme\n");
-//    printf("Entrez votre choix: ");
-//    scanf("%d", &choice);
-//    return choice;
-//}
+// int showMenu() {
+//     int choice;
+//     printf("\nMenu:\n");
+//     printf("1. Chercher des joueurs\n");
+//     printf("2. Fermer le programme\n");
+//     printf("Entrez votre choix: ");
+//     scanf("%d", &choice);
+//     return choice;
+// }
 //
 //// Fonction pour rechercher des utilisateurs
-//void searchUsers(SOCKET sendSock, SOCKET recvSock, char *userName, char *uniqueId, User **userList, struct sockaddr_in *broadcastAddr) {
-//    int userChoice, userCount;
+// void searchUsers(SOCKET sendSock, SOCKET recvSock, char *userName, char *uniqueId, User **userList, struct sockaddr_in *broadcastAddr) {
+//     int userChoice, userCount;
 //
-//    do {
-//        clearUserList(userList); // Réinitialisation de la liste des utilisateurs
+//     do {
+//         clearUserList(userList); // Réinitialisation de la liste des utilisateurs
 //
-//        char sendBuffer[BUF_SIZE];
-//        sprintf(sendBuffer, "%s:%s", userName, uniqueId);
+//         char sendBuffer[BUF_SIZE];
+//         sprintf(sendBuffer, "%s:%s", userName, uniqueId);
 //
-//        if (sendto(sendSock, sendBuffer, strlen(sendBuffer), 0, (struct sockaddr *)broadcastAddr, sizeof(*broadcastAddr)) == SOCKET_ERROR) {
-//            handleError("Broadcast send failed");
-//        }
+//         if (sendto(sendSock, sendBuffer, strlen(sendBuffer), 0, (struct sockaddr *)broadcastAddr, sizeof(*broadcastAddr)) == SOCKET_ERROR) {
+//             handleError("Broadcast send failed");
+//         }
 //
-//        char buffer[BUF_SIZE];
-//        struct sockaddr_in fromAddr;
-//        int fromAddrSize = sizeof(fromAddr);
-//        int receivedBytes = recvfrom(recvSock, buffer, BUF_SIZE, 0, (struct sockaddr *)&fromAddr, &fromAddrSize);
+//         char buffer[BUF_SIZE];
+//         struct sockaddr_in fromAddr;
+//         int fromAddrSize = sizeof(fromAddr);
+//         int receivedBytes = recvfrom(recvSock, buffer, BUF_SIZE, 0, (struct sockaddr *)&fromAddr, &fromAddrSize);
 //
-//        if (receivedBytes > SOCKET_ERROR) {
-//            buffer[receivedBytes] = '\0';
-//            char *receivedId = strrchr(buffer, ':');
-//            if (receivedId && strcmp(receivedId + 1, uniqueId) != 0) {
-//                *receivedId = '\0';
-//                char ipAddress[IP_SIZE];
-//                strcpy(ipAddress, inet_ntoa(fromAddr.sin_addr));
-//                updateUser(userList, buffer, receivedId + 1, ipAddress);
-//            }
-//        }
+//         if (receivedBytes > SOCKET_ERROR) {
+//             buffer[receivedBytes] = '\0';
+//             char *receivedId = strrchr(buffer, ':');
+//             if (receivedId && strcmp(receivedId + 1, uniqueId) != 0) {
+//                 *receivedId = '\0';
+//                 char ipAddress[IP_SIZE];
+//                 strcpy(ipAddress, inet_ntoa(fromAddr.sin_addr));
+//                 updateUser(userList, buffer, receivedId + 1, ipAddress);
+//             }
+//         }
 //
-//        displayUsers(*userList, &userCount);
-//        printf("%d. Rechercher a nouveau\n", userCount);
-//        printf("%d. Retour au menu principal\n", userCount + 1);
-//        printf("Entrez votre choix: ");
-//        scanf("%d", &userChoice);
+//         displayUsers(*userList, &userCount);
+//         printf("%d. Rechercher a nouveau\n", userCount);
+//         printf("%d. Retour au menu principal\n", userCount + 1);
+//         printf("Entrez votre choix: ");
+//         scanf("%d", &userChoice);
 //
-//        if (userChoice == userCount) { // Rechercher à nouveau
-//            continue;
-//        } else if (userChoice == userCount + 1) { // Retour au menu principal
-//            break;
-//        }
-//    } while (1);
-//}
+//         if (userChoice == userCount) { // Rechercher à nouveau
+//             continue;
+//         } else if (userChoice == userCount + 1) { // Retour au menu principal
+//             break;
+//         }
+//     } while (1);
+// }
 //
