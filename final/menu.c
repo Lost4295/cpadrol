@@ -153,7 +153,11 @@ int main(int argc, char *argv[])
         }
         fconfig = 1;
         fmenu = 0;
+        #ifdef __unix__
         int dir = mkdir("replays", 777);
+        #else
+        int dir = mkdir("replays");
+        #endif
         if (!dir)
         {
             printf("Directory created.\n");
