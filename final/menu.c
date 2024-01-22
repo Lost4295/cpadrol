@@ -274,55 +274,23 @@ int main(int argc, char *argv[])
                     break;
                 case SDLK_LEFT:
                     printf("sym left\n '%s'\n", player1ps);
-                    if (fplay && flocal && !ended)
+                    if ((fplay && flocal && !ended) || (fplay && fserver && j == 1) || (fplay && fclient && j == 2))
                     {
                         (nuc == 0) ? nuc = 6 : nuc--;
                         printf("sym left : nuc = %d\n", nuc);
                         loadTableau(renderer);
-                        SDL_Delay(50);
-                        printChooseArrow(renderer, nuc);
-                    }
-                    else if (fplay && fserver && j == 1)
-                    {
-                        (nuc == 0) ? nuc = 6 : nuc--;
-                        printf("sym left : nuc = %d\n", nuc);
-                        loadTableau(renderer);
-                        SDL_Delay(50);
-                        printChooseArrow(renderer, nuc);
-                    }
-                    else if (fplay && fclient && j == 2)
-                    {
-                        (nuc == 0) ? nuc = 6 : nuc--;
-                        printf("sym left : nuc = %d\n", nuc);
-                        loadTableau(renderer);
-                        SDL_Delay(50);
+                        SDL_Delay(10);
                         printChooseArrow(renderer, nuc);
                     }
                     break;
                 case SDLK_RIGHT:
                     printf("sym right\n");
-                    if (fplay && flocal && !ended)
+                    if ((fplay && flocal && !ended) || (fplay && fserver && j == 1) || (fplay && fclient && j == 2))
                     {
                         (nuc == 6) ? nuc = 0 : nuc++;
                         printf("sym right : nuc = %d\n", nuc);
                         loadTableau(renderer);
-                        SDL_Delay(50);
-                        printChooseArrow(renderer, nuc);
-                    }
-                    else if (fplay && fserver && j == 1)
-                    {
-                        (nuc == 6) ? nuc = 0 : nuc++;
-                        printf("sym right : nuc = %d\n", nuc);
-                        loadTableau(renderer);
-                        SDL_Delay(50);
-                        printChooseArrow(renderer, nuc);
-                    }
-                    else if (fplay && fclient && j == 2)
-                    {
-                        (nuc == 6) ? nuc = 0 : nuc++;
-                        printf("sym right : nuc = %d\n", nuc);
-                        loadTableau(renderer);
-                        SDL_Delay(50);
+                        SDL_Delay(10);
                         printChooseArrow(renderer, nuc);
                     }
                     break;
@@ -628,8 +596,7 @@ int main(int argc, char *argv[])
                     {
                         SDL_RenderClear(renderer);
                         loadTableau(renderer);
-                        SDL_Delay(50);
-
+                        SDL_Delay(10);
                         sendMove(tcpsock, nuc);
                         InsertCoin(renderer, nuc, replayfile);
                         SDL_RenderPresent(renderer);
@@ -638,9 +605,8 @@ int main(int argc, char *argv[])
                     {
                         SDL_RenderClear(renderer);
                         loadTableau(renderer);
-                        SDL_Delay(50);
+                        SDL_Delay(10);
                         sendMove(tcpsock, nuc);
-
                         InsertCoin(renderer, nuc, replayfile);
                         SDL_RenderPresent(renderer);
                     }
@@ -844,7 +810,7 @@ int main(int argc, char *argv[])
                 SDL_RenderPresent(renderer);
             }
         }
-        SDL_Delay(20);
+        SDL_Delay(5);
     }
     statut = EXIT_SUCCESS;
     SDL_StopTextInput();
