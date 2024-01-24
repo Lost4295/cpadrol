@@ -80,17 +80,19 @@ int main()
     }
     clrtoeol();
     refresh();
+    system("dir");
+    sleep(5);
     switch (choice)
     {
     case 1:
-        system("p4s||p4s.exe");
+        system("p4s||start p4s.exe");
         sleep(1);
         break;
     case 2:
-        system("p4c||p4c.exe");
+        system("p4c||start p4c.exe");
         break;
     case 3:
-        system("replayer||replayer.exe");
+        system("replayer||start replayer.exe");
         break;
     case 4:
         goto end;
