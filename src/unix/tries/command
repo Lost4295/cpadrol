@@ -1,0 +1,15 @@
+lin : gcc interface5.c $(sdl2-config --cflags --libs)   -lSDL2_ttf -lSDL2_mixer -lSDL2_net -lSDL2_image && ./a.out
+
+win : gcc  menu.c -ISDL2/include -LSDL2/lib -w -o main -lmingw32 -lSDL2main -lSDL2  -lSDL2_ttf -lSDL2_mixer -lSDL2_net -lSDL2_image -lws2_32
+
+gcc  menu.c -ISDL2/include -LSDL2/lib -w -o main -lmingw32 -lSDL2main -lSDL2  -lSDL2_ttf -lSDL2_mixer -lSDL2_net -lSDL2_image -lws2_32 && ./main
+gcc bn.c -lncursesw -o jaja
+gcc Puissance4réseauS.c -o b -lSDL2 -lSDL2_net -lws2_32
+gcc Puissance4réseauC.c -o a -lSDL2 -lSDL2_net -lws2_32
+
+
+install : 
+    apt-get install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev libsdl2-net-dev libncurses5-dev
+     ou 
+    pacman -S sdl2 sdl2_image sdl2_ttf sdl2_mixer sdl2_net ncurses
+    pacman -S mingw-w64-x86_64-SDL2_net mingw-w64-x86_64-SDL2_image mingw-w64-x86_64-SDL2_ttf mingw-w64-x86_64-SDL2_mixer mingw-w64-x86_64-SDL2 mingw-w64-x86_64-ncurses
