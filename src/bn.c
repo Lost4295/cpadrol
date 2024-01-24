@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #ifdef _WIN32
 #include <ncurses/ncurses.h>
 #else
@@ -76,14 +77,14 @@ int main()
     else
     {
         mvprintw(23, 0, "You chose choice %d with choice string %s\n", choice, choices[choice - 1]);
-        sleep(2);
     }
     clrtoeol();
     refresh();
     switch (choice)
     {
     case 1:
-        system("./a.out||./a.exe");
+        system("./hey.out||hey.exe");
+        sleep(1);
         break;
     case 2:
         /* TODO : get l'ip puis render*/
