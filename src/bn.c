@@ -1,6 +1,9 @@
 #include <stdio.h>
+#ifdef _WIN32
 #include <ncurses/ncurses.h>
-
+#else
+#include <ncurses.h>
+#endif
 #define WIDTH 30
 #define HEIGHT 10
 
