@@ -1,1 +1,3 @@
-gcc interface5.c $(sdl2-config --cflags --libs) -lSDL2_image -lSDL2_ttf && ./a.out
+lin : gcc interface5.c $(sdl2-config --cflags --libs)   -lSDL2_ttf -lSDL2_mixer -lSDL2_net -lSDL2_image && ./a.out
+
+win : gcc  menu.c -ISDL2/include -LSDL2/lib -w -o main -lmingw32 -lSDL2main -lSDL2  -lSDL2_ttf -lSDL2_mixer -lSDL2_net -lSDL2_image -lws2_32

@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
     playmenu[2] = &local;
     playmenu[3] = &lookup;
     playmenu[4] = &retour;
+    ctab = malloc(10 * sizeof(char *));
 
     color_knob.y = color_rect.y;
     color_knob.h = color_rect.h;
@@ -153,7 +154,11 @@ int main(int argc, char *argv[])
         }
         fconfig = 1;
         fmenu = 0;
+#ifdef __unix__
         int dir = mkdir("replays", 777);
+#else
+        int dir = mkdir("replays");
+#endif
         if (!dir)
         {
             printf("Directory created.\n");
@@ -181,7 +186,7 @@ int main(int argc, char *argv[])
         setWindowColor(renderer, black_color);
         print_pseudo_maker(font, renderer, " ");
     }
-    chmod("replays",0777);
+    chmod("replays", 0777);
     SDL_Event event;
     SDL_bool quit = SDL_FALSE;
     SDL_bool resized = SDL_FALSE;
@@ -211,6 +216,9 @@ int main(int argc, char *argv[])
                 printf("pop !");
                 pop(inputText);
                 renderText = SDL_TRUE;
+            }
+            else if ( event.key.keysym.sym == SDLK_h && (!fclient && !fconfig)  ) {
+                SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Help", "Appuyez sur Echap pour quitter.\nAppuyez sur Entrée pour valider.\nUtilisez les flèches directionnelles pour vous déplacer dans les menus.", NULL);
             }
             else
             {
@@ -243,6 +251,11 @@ int main(int argc, char *argv[])
                         (numm == 0) ? numm = 5 : numm--;
                         printmusicfiles(font, renderer, numm);
                     }
+                    if (fchserv)
+                    {
+                        (nuch == 0) ? nuch = ccpt - 1 : nuch--;
+                        chooseClientMenu(ctab, nuch);
+                    }
                     break;
                 case SDLK_DOWN:
                     printf("sym down\n");
@@ -270,6 +283,11 @@ int main(int argc, char *argv[])
                     {
                         (numm == 5) ? numm = 0 : numm++;
                         printmusicfiles(font, renderer, numm);
+                    }
+                    if (fchserv)
+                    {
+                        (nuch == 5) ? nuch = 0 : nuch++;
+                        chooseClientMenu(ctab, nuch);
                     }
                     break;
                 case SDLK_LEFT:
@@ -321,13 +339,14 @@ int main(int argc, char *argv[])
                     {
                         fmenu = 1;
                         fplay = 0;
-                        print_menu_opts(font, renderer, num);
-                    }
-                    else if (flocal)
-                    {
-                        fplay = 1;
                         flocal = 0;
-                        print_play_opts(font, renderer, nup);
+                        if (!ended)
+                        {
+                            fclose(replayfile);
+                            remove(filename);
+                            printf("File deleted.\n");
+                        }
+                        print_menu_opts(font, renderer, num);
                     }
                     else if (fconfig)
                     {
@@ -395,6 +414,8 @@ int main(int argc, char *argv[])
                         fplay = 0;
                         fmenu = 1;
                         flocal = 0;
+                        fserver = 0;
+                        fclient = 0;
                         nuc = 0;
                         print_menu_opts(font, renderer, num);
                     }
@@ -420,6 +441,7 @@ int main(int argc, char *argv[])
                             fmenu = 0;
                             fmplay = 1;
                             print_play_opts(font, renderer, nup);
+                            broadcastPlayerInfo(player1ps, "255.255.255.255");
                             break;
                         case 1:
                             fmreplay = 1;
@@ -463,6 +485,10 @@ int main(int argc, char *argv[])
                         case 2:
                             fsettings = 0;
                             fchmusic = 1;
+                            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Changement de Musique", "Appuyez sur Echap pour quitter.\nAppuyez sur A pour jouer la musique actuelle.\nAppuyez sur L pour jouer la musique en boucle.\nAppuyez sur + pour augmenter le volume.\nAppuyez sur - pour diminuer le volume.\nAppuyez sur M pour couper la musique.\nAppuyez sur P pour mettre en pause la musique.", NULL);
+                            if (fmute){
+                                SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Mute", "La musique est actuellement en mute.\nAppuyez sur M pour la remettre.", NULL);
+                            }
                             printmusicfiles(font, renderer, numm);
                             break;
                         case 3:
@@ -488,9 +514,7 @@ int main(int argc, char *argv[])
                             printText(font, renderer, white_color, get_ip(), &recte, black_color);
                             printText(font, renderer, white_color, "Donnez cette adresse IP à votre adversaire !", &rectt, black_color);
                             SDL_RenderPresent(renderer);
-
                             tcpsock = createServer();
-
                             fplay = 1;
                             SDL_RenderClear(renderer);
                             createtab();
@@ -521,8 +545,10 @@ int main(int argc, char *argv[])
                             break;
                         case 3:
                             fmplay = 0;
-                            fclient = 1;
-                            // todo faire le menu avec ZACHARIE
+                            fchserv = 1;
+                            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Recherche de serveurs", "La fonction avait pour but d'effectuer une recherche asynchrone de joueurs. Une fois les joueurs trouvés, elle affichait une liste de ces mêmes joueurs.\n Il fallait ensuite choisir la personne avec qui l'on voulait jouer, pour que celle-ci ne reçoive une notification de demande de connexion, qu'elle devait accepter, ou non, si elle voulait jouer.\n Cette fonction n'est pas réalisable en C, mais on a commencé à la réaliser.", NULL);
+                            char **tab = listenForBroadcasts();
+                            printClientMenu(tab);
                             break;
                         case 4:
                             fmenu = 1;
@@ -613,6 +639,21 @@ int main(int argc, char *argv[])
                     else if (adv && needenter)
                     {
                         needenter = false;
+                    }
+                    else if (fchserv)
+                    {
+                        printf("You selected : %s\n", ctab[nuch]); // A enlever
+                        char *ip = ctab[nuch];
+                        printf("IP : %s\n", ip);
+                        tcpsock = createClient(ip);
+                        fplay = 1;
+                        fchserv = 0;
+                        SDL_RenderClear(renderer);
+                        createtab();
+                        createReplay();
+                        createTableau(renderer);
+                        loadTableau(renderer);
+                        print_turn();
                     }
                     break;
                 case SDLK_m:
@@ -841,4 +882,3 @@ Quit:
     actsound = NULL;
     return statut;
 }
-

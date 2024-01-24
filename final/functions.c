@@ -1,19 +1,22 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_net.h>
 #include <SDL2/SDL_mixer.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <errno.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <string.h>
+#ifdef __WIN32__
+#include <winsock2.h>
+#endif
+
 #define IP_BUFFER_LEN 100
 #define BUFFER_SIZE 1000
 #define MUSIC 2
@@ -49,7 +52,6 @@ static float color_slider_value = 1.0f;
 static float color_slider_value2 = 1.0f;
 static float color_slider_value3 = 1.0f;
 static float color_slider_value4 = 1.0f;
-
 
 // TODO : Implémenter le multijoueur
 // TODO Voir l'envoi du pseudo avec zacharie
@@ -93,13 +95,16 @@ char *player1ps;
 char *player2ps;
 int num = 0, nus = 0, nup = 0, nuc = 0, nur = 0, numm = 1;
 int flocal = 0, fserver = 0, fclient = 0;
-int fmplay = 0, fmreplay = 0, fccolor = 0, fsettings = 0, fmenu = 0, fplay = 0, fconfig = 1, freplay = 0, fauto = -1, fchmusic = 0, fmauto = 0, floop = 1, fmute = 0;
+int fmplay = 0, fmreplay = 0, fccolor = 0, fsettings = 0, fmenu = 0, fchserv = 0, fplay = 0, fconfig = 1, freplay = 0, fauto = -1, fchmusic = 0, fmauto = 0, floop = 1, fmute = 0;
 int ended = 0, secret = 0;
+int ccpt = 0;
+char **ctab;
 int maxfiles = 0;
 char **menu[4];
 char **settingsmenu[4];
 char **playmenu[5];
 char path[50];
+char filename[250];
 char buffer;
 FILE *replayfile;
 
@@ -183,7 +188,6 @@ void launchmusic(int i)
 {
     if (!fmute)
     {
-
         char path[30];
         char musique[20];
         char num[2];
@@ -547,7 +551,7 @@ void get_user_vars(TTF_Font *font, SDL_Renderer *renderer)
             char *ane;
             p = strtok(NULL, d);
             ane = strtok(p, n);
-            player1ps = malloc(sizeof(char) * strlen(ane)+1);
+            player1ps = malloc(sizeof(char) * strlen(ane) + 1);
             strcpy(player1ps, ane);
             int len = strlen(ane);
             player1ps[len] = '\0';
@@ -614,6 +618,7 @@ void get_user_vars(TTF_Font *font, SDL_Renderer *renderer)
             colorA = atoi(ps);
         }
     }
+    fclose(file);
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Bienvenue !", texte, window);
 
     SDL_RenderPresent(renderer);
@@ -682,9 +687,9 @@ int printChooseArrow(SDL_Renderer *renderer, int num)
         printf("Erreur de chargement de l'image : %s\n cwd = %s\n", SDL_GetError(), getcwd(NULL, 0));
     }
     img_texture = SDL_CreateTextureFromSurface(renderer, image);
-    SDL_Rect rect = {num * 50, 6 * 50, 50, 50};
+    SDL_Rect rect = {num * 50+20, 6 * 50+20, 50, 50};
     SDL_RenderCopy(renderer, img_texture, NULL, &rect);
-    SDL_RenderPresent(renderer); //HERE
+    SDL_RenderPresent(renderer); // HERE
 }
 
 int createTableau(SDL_Renderer *renderer)
@@ -700,50 +705,50 @@ int createTableau(SDL_Renderer *renderer)
     {
         multi_rect1[i].w = 50;
         multi_rect1[i].h = 50;
-        multi_rect1[i].x = 0;
-        multi_rect1[i].y = i * 50;
+        multi_rect1[i].x = 20;
+        multi_rect1[i].y = i * 50 + 20;
     }
     for (int i = 0; i < 6; i++)
     {
         multi_rect2[i].w = 50;
         multi_rect2[i].h = 50;
-        multi_rect2[i].x = 50;
-        multi_rect2[i].y = i * 50;
+        multi_rect2[i].x = 70;
+        multi_rect2[i].y = i * 50 + 20;
     }
     for (int i = 0; i < 6; i++)
     {
         multi_rect3[i].w = 50;
         multi_rect3[i].h = 50;
-        multi_rect3[i].x = 100;
-        multi_rect3[i].y = i * 50;
+        multi_rect3[i].x = 120;
+        multi_rect3[i].y = i * 50 + 20;
     }
     for (int i = 0; i < 6; i++)
     {
         multi_rect4[i].w = 50;
         multi_rect4[i].h = 50;
-        multi_rect4[i].x = 150;
-        multi_rect4[i].y = i * 50;
+        multi_rect4[i].x = 170;
+        multi_rect4[i].y = i * 50 + 20;
     }
     for (int i = 0; i < 6; i++)
     {
         multi_rect5[i].w = 50;
         multi_rect5[i].h = 50;
-        multi_rect5[i].x = 200;
-        multi_rect5[i].y = i * 50;
+        multi_rect5[i].x = 220;
+        multi_rect5[i].y = i * 50 + 20;
     }
     for (int i = 0; i < 6; i++)
     {
         multi_rect6[i].w = 50;
         multi_rect6[i].h = 50;
-        multi_rect6[i].x = 250;
-        multi_rect6[i].y = i * 50;
+        multi_rect6[i].x = 270;
+        multi_rect6[i].y = i * 50 + 20;
     }
     for (int i = 0; i < 6; i++)
     {
         multi_rect7[i].w = 50;
         multi_rect7[i].h = 50;
-        multi_rect7[i].x = 300;
-        multi_rect7[i].y = i * 50;
+        multi_rect7[i].x = 320;
+        multi_rect7[i].y = i * 50 + 20;
     }
     SDL_SetRenderDrawColor(renderer, 0, 0, 140, 255);
     SDL_RenderFillRects(renderer, multi_rect1, 6);
@@ -754,27 +759,27 @@ int createTableau(SDL_Renderer *renderer)
     SDL_RenderFillRects(renderer, multi_rect6, 6);
     SDL_RenderFillRects(renderer, multi_rect7, 6);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-    SDL_RenderDrawLine(renderer, 0, 0, 50 * 7, 0);
-    SDL_RenderDrawLine(renderer, 0, 50, 50 * 7, 50);
-    SDL_RenderDrawLine(renderer, 0, 100, 50 * 7, 100);
-    SDL_RenderDrawLine(renderer, 0, 150, 50 * 7, 150);
-    SDL_RenderDrawLine(renderer, 0, 200, 50 * 7, 200);
-    SDL_RenderDrawLine(renderer, 0, 250, 50 * 7, 250);
-    SDL_RenderDrawLine(renderer, 0, 300, 50 * 7, 300);
-    SDL_RenderDrawLine(renderer, 0, 0, 0, 50 * 6);
-    SDL_RenderDrawLine(renderer, 50, 0, 50, 6 * 50);
-    SDL_RenderDrawLine(renderer, 100, 0, 100, 50 * 6);
-    SDL_RenderDrawLine(renderer, 150, 0, 150, 50 * 6);
-    SDL_RenderDrawLine(renderer, 200, 0, 200, 50 * 6);
-    SDL_RenderDrawLine(renderer, 250, 0, 250, 50 * 6);
-    SDL_RenderDrawLine(renderer, 300, 0, 300, 50 * 6);
-    SDL_RenderDrawLine(renderer, 350, 0, 350, 50 * 6);
+    SDL_RenderDrawLine(renderer, 20, 20+0, 20+50 * 7, 20+0);
+    SDL_RenderDrawLine(renderer, 20, 20+50, 20+50 * 7, 20+50);
+    SDL_RenderDrawLine(renderer, 20, 20+100, 20+50 * 7, 20+100);
+    SDL_RenderDrawLine(renderer, 20, 20+150, 20+50 * 7, 20+150);
+    SDL_RenderDrawLine(renderer, 20, 20+200, 20+50 * 7, 20+200);
+    SDL_RenderDrawLine(renderer, 20, 20+250, 20+50 * 7, 20+250);
+    SDL_RenderDrawLine(renderer, 20, 20+300, 20+50 * 7, 20+300);
+    SDL_RenderDrawLine(renderer, 0+20, 0+20, 0+20, 20+50 * 6);
+    SDL_RenderDrawLine(renderer, 50+20, 20, 50+20, 20+6 * 50);
+    SDL_RenderDrawLine(renderer, 100+20, 20, 100+20, 20+50 * 6);
+    SDL_RenderDrawLine(renderer, 150+20, 20, 150+20, 20+50 * 6);
+    SDL_RenderDrawLine(renderer, 200+20, 20, 200+20, 20+50 * 6);
+    SDL_RenderDrawLine(renderer, 250+20, 20, 250+20, 20+50 * 6);
+    SDL_RenderDrawLine(renderer, 300+20, 20, 300+20, 20+50 * 6);
+    SDL_RenderDrawLine(renderer, 350+20, 20, 350+20, 20+50 * 6);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
     for (int i = 0; i < 6; i++)
     {
         for (int j = 0; j < 7; j++)
         {
-            SDL_RenderFillCircle(renderer, j * 50 + 25, i * 50 + 25, 20);
+            SDL_RenderFillCircle(renderer, j * 50 + 45, i * 50 + 45, 20);
         }
     }
     SDL_Delay(10);
@@ -813,7 +818,7 @@ int InsertCoin(SDL_Renderer *renderer, int num, FILE *replayfile)
                 actsound = chooseRandSound();
                 Mix_PlayChannel(-1, actsound, 0);
             }
-            SDL_RenderFillCircle(renderer, num * 50 + 25, i * 50 + 25, 20);
+            SDL_RenderFillCircle(renderer, num * 50 + 45, i * 50 + 45, 20);
             checkSecretPions(i, num);
             break;
         }
@@ -828,10 +833,9 @@ int InsertCoin(SDL_Renderer *renderer, int num, FILE *replayfile)
 }
 
 void checkSecretPions(int i, int j)
-{ //TODO quand pseudo sera ok
-    SDL_Rect rct = {j * 50 + 7, i * 50 + 7, 35, 35};
-    if ((fsy && tableau[i][j] == 1) || (fsy && tableau[i][j] == 3)
-        /*|| (strcmp("Ylan",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
+{ 
+    SDL_Rect rct = {j * 50 + 28, i * 50 + 28, 35, 35};
+    if ((fsy && tableau[i][j] == 1) || (fsy && tableau[i][j] == 3) || ((fclient || fserver) && (strcmp("Ylan", player2ps) == 0 && (tableau[i][j] == 2 || tableau[i][j] == 4))))
     {
         SDL_Surface *image = IMG_Load("images/ylan.png");
         SDL_Texture *img_texture = NULL;
@@ -845,8 +849,7 @@ void checkSecretPions(int i, int j)
         SDL_DestroyTexture(img_texture);
         SDL_FreeSurface(image);
     }
-    if ((fsm && tableau[i][j] == 1) || (fsm && tableau[i][j] == 3)
-        /*|| (strcmp("Mathis",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
+    if ((fsm && tableau[i][j] == 1) || (fsm && tableau[i][j] == 3) || ((fclient || fserver) && (strcmp("Mathis", player2ps) == 0 && (tableau[i][j] == 2 || tableau[i][j] == 4))))
     {
         SDL_Surface *image = IMG_Load("images/mathis.png");
         SDL_Texture *img_texture = NULL;
@@ -861,8 +864,7 @@ void checkSecretPions(int i, int j)
         SDL_DestroyTexture(img_texture);
         SDL_FreeSurface(image);
     }
-    if ((fsz && tableau[i][j] == 1) || (fsz && tableau[i][j] == 3)
-        /*|| (strcmp("Zacharie",player2ps)==0 &&(tableau[i][j]==2 || tableau[i][j]==4) )*/)
+    if ((fsz && tableau[i][j] == 1) || (fsz && tableau[i][j] == 3) || ((fclient || fserver) && (strcmp("Zacharie", player2ps) == 0 && (tableau[i][j] == 2 || tableau[i][j] == 4))))
     {
         SDL_Surface *image = IMG_Load("images/zacharie.png");
         SDL_Texture *img_texture = NULL;
@@ -1014,13 +1016,13 @@ int loadTableau(SDL_Renderer *renderer)
             {
                 SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
             }
-            SDL_RenderFillCircle(renderer, j * 50 + 25, i * 50 + 25, 20);
+            SDL_RenderFillCircle(renderer, j * 50 + 45, i * 50 + 45, 20);
 
             checkSecretPions(i, j);
         }
     }
     SDL_Delay(10);
-    SDL_RenderPresent(renderer); //HERE
+    SDL_RenderPresent(renderer); // HERE
 }
 
 void verifywin(int *joueur)
@@ -1213,6 +1215,7 @@ void printFileProperties(struct stat stats)
 
 const char *get_ip()
 {
+#ifdef __unix__
     // Read out "hostname -I" command output
     FILE *fd = popen("hostname -I", "r");
     if (fd == NULL)
@@ -1239,10 +1242,38 @@ const char *get_ip()
     ret[strlen(buffer)] = '\0';
     printf("%s\n", ret);
     return ret;
+
+#else
+
+    struct in_addr addr;
+    struct hostent *localhost;
+    int ret = -1;
+    char localname[1000] = {0};
+
+    // Demarrer les services de reseau
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+    // Recuperer le nom du PC local
+    ret = gethostname(&(localname[0]), 999);
+
+    printf("Host : %s (%d)\n", localname, ret);
+
+    // Recuperer une structure decrivant un hote a partir de son nom
+    localhost = gethostbyname(&(localname[0]));
+
+    // Extraire l'adresse (on suppose qu'elle est de type IPv4)
+    addr = *((struct in_addr *)localhost->h_addr_list[0]);
+
+    // Affichage
+    printf("IP = %s\n", inet_ntoa(addr));
+    return inet_ntoa(addr);
+#endif
 }
 
 int printreplayfiles()
 {
+
     struct stat stats;
     DIR *d;
     struct dirent *dir;
@@ -1252,10 +1283,29 @@ int printreplayfiles()
     {
         while ((dir = readdir(d)) != NULL)
         {
+#if _DIRENT_HAVE_D_TYPE
             if (dir->d_type == DT_REG)
             {
                 cpt++;
             }
+#else
+            if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
+            {
+                continue;
+            }
+            char p[] = ".";
+            char *test = strtok(dir->d_name, p);
+            test = strtok(NULL, p);
+            printf("test = %s\n", test);
+            if ((strcmp(test, "txt")) == 0)
+            {
+                cpt++;
+            }
+            else
+            {
+                printf("Erreur de chargement des replays : %s\n cwd = %s\n", SDL_GetError(), getcwd(NULL, 0));
+            }
+#endif
         }
         closedir(d);
     }
@@ -1294,11 +1344,27 @@ int printreplayfiles()
     {
         while ((dir = readdir(d)) != NULL)
         {
+#if _DIRENT_HAVE_D_TYPE
             if (dir->d_type == DT_REG)
             {
                 printText(font, renderer, white_color, dir->d_name, &rects[i], black_color);
                 i++;
             }
+#else
+            if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
+            {
+                continue;
+            }
+            char p[] = ".";
+            char *test = strtok(dir->d_name, p);
+            test = strtok(NULL, p);
+            printf("test = %s\n", test);
+            if ((strcmp(test, "txt")) == 0)
+            {
+                printText(font, renderer, white_color, dir->d_name, &rects[i], black_color);
+                i++;
+            }
+#endif
         }
         closedir(d);
     }
@@ -1318,10 +1384,21 @@ int printmusicfiles(TTF_Font *font, SDL_Renderer *renderer, int num)
     {
         while ((dir = readdir(d)) != NULL)
         {
+#if _DIRENT_HAVE_D_TYPE
             if (dir->d_type == DT_REG)
             {
                 cpt++;
             }
+#else
+            if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
+            {
+                continue;
+            }
+            if (d->dd_name != NULL)
+            {
+                cpt++;
+            }
+#endif
         }
         closedir(d);
     }
@@ -1342,6 +1419,7 @@ int printmusicfiles(TTF_Font *font, SDL_Renderer *renderer, int num)
         {
             while ((dir = readdir(d)) != NULL)
             {
+#if _DIRENT_HAVE_D_TYPE
                 if (dir->d_type == DT_REG)
                 {
                     char textmus[25];
@@ -1361,6 +1439,33 @@ int printmusicfiles(TTF_Font *font, SDL_Renderer *renderer, int num)
                     printf("%d = %s\n", i, dir->d_name);
                     i++;
                 }
+#else
+                if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
+                {
+                    continue;
+                }
+                if (dir->d_name != NULL)
+                {
+                    char textmus[10];
+                    char numt = i + 1 + '0';
+                    strcpy(&textmus, "Musique ");
+                    textmus[8] = numt;
+                    printf("textmus = %s\n", textmus);
+                    textmus[9] = '\0';
+                    printf("dir->d_name = %s\n", dir->d_name);
+                    if (i == num)
+                    {
+                        printText(font, renderer, yellow_color, textmus, &rects[i], black_color);
+                        printf(" actual : %d = %s\n", i, dir->d_name);
+                    }
+                    else
+                    {
+                        printText(font, renderer, white_color, textmus, &rects[i], black_color);
+                    }
+                    printf("%d = %s\n", i, dir->d_name);
+                    i++;
+                }
+#endif
             }
             closedir(d);
         }
@@ -1421,7 +1526,7 @@ void print_replay_title()
 void print_files(TTF_Font *font, SDL_Renderer *renderer, int num)
 {
     SDL_RenderClear(renderer);
-    SDL_Surface *image = IMG_Load("images/images.jpeg");
+    SDL_Surface *image = IMG_Load("images/p.jpg");
     SDL_Texture *img_texture = NULL;
     if (!image)
     {
@@ -1466,8 +1571,10 @@ void print_files(TTF_Font *font, SDL_Renderer *renderer, int num)
     d = opendir("replays");
     if (d)
     {
+        printf("d = %s\n", d->dd_name);
         while ((dir = readdir(d)) != NULL)
         {
+#if _DIRENT_HAVE_D_TYPE
             if (dir->d_type == DT_REG)
             {
                 if (i == num)
@@ -1482,6 +1589,27 @@ void print_files(TTF_Font *font, SDL_Renderer *renderer, int num)
                 printf("%d = %s\n", i, dir->d_name);
                 i++;
             }
+#else
+
+            if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
+            {
+                continue;
+            }
+            if (d->dd_name != NULL)
+            {
+                if (i == num)
+                {
+                    printText(font, renderer, yellow_color, dir->d_name, &rects[i], black_color);
+                    printf(" actual : %d = %s\n", i, dir->d_name);
+                }
+                else
+                {
+                    printText(font, renderer, white_color, dir->d_name, &rects[i], black_color);
+                }
+                printf("%d = %s\n", i, dir->d_name);
+                i++;
+            }
+#endif
         }
         closedir(d);
     }
@@ -1500,8 +1628,18 @@ void replayGame(int num)
     {
         while ((dir = readdir(d)) != NULL)
         {
+
+#if _DIRENT_HAVE_D_TYPE
             if (dir->d_type == DT_REG)
             {
+#else
+            if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
+            {
+                continue;
+            }
+            if (d->dd_name != NULL)
+            {
+#endif
                 if (i == num)
                 {
                     char filename[100];
@@ -1685,12 +1823,12 @@ void replayGame(int num)
     }
 }
 
+
 int replacer(int line, char *wrline)
 {
     /* File pointer to hold reference of input file */
     FILE *fPtr;
     FILE *fTemp;
-    char *path = "config.txt";
     char buffer[BUFFER_SIZE];
     char printline[BUFFER_SIZE];
     char newline[BUFFER_SIZE];
@@ -1733,12 +1871,53 @@ int replacer(int line, char *wrline)
             fputs(buffer, fTemp);
     }
     /* Close all files to release resource */
-    fclose(fPtr);
-    fclose(fTemp);
+    int ptr = fclose(fPtr);
+    int temp = fclose(fTemp);
+    if (ptr == 0)
+    {
+        printf("Closed successfully");
+    }
+    else
+    {
+        printf("Unable to close the file. errno = %d\n", errno);
+    }
+    if (temp == 0)
+    {
+        printf("Closed successfully");
+    }
+    else
+    {
+        printf("Unable to close the file. errno = %d\n", errno);
+    }
     /* Delete original source file */
-    remove("config.txt");
+    int rm = remove("config.txt");
+    if (rm == 0)
+    {
+        printf("Deleted successfully");
+    }
+    else
+    {
+        printf("Unable to delete the file. errno = %d\n", errno);
+    }
+    int rm2 = unlink("config.txt");
+    if (rm2 == 0)
+    {
+        printf("Deleted successfully");
+    }
+    else
+    {
+        printf("Unable to delete the file. errno = %d\n", errno);
+    }
     /* Rename temporary file as original file */
-    rename("replace.tmp", "config.txt");
+    int rn = rename("replace.tmp", "config.txt");
+    if (rn == 0)
+    {
+        printf("Renamed successfully");
+    }
+    else
+    {
+        printf("Unable to rename the file. errno = %d\n", errno);
+    }
     printf("\nSuccessfully replaced '%d' line with '%s'.\n", line, printline);
     return 0;
 }
@@ -1830,20 +2009,20 @@ int receiveSize(TCPsocket socket)
     return SDLNet_Read32(&player2size);
 }
 
-void sendPseudo(TCPsocket socket)
+void sendPseudo(TCPsocket socket, int len)
 {
-    SDLNet_TCP_Send(socket, player1ps, strlen(player1ps));
+    SDLNet_TCP_Send(socket, player1ps, len);
 }
 
-void receivePseudo(TCPsocket socket, char* player2ps)
+void receivePseudo(TCPsocket socket, char *player2ps, int len)
 {
-    SDLNet_TCP_Recv(socket, player2ps, sizeof(player2ps));
+    SDLNet_TCP_Recv(socket, player2ps, len);
 }
 
 void createReplay()
 {
     printf("Writing file\n");
-    char filename[250];
+
     int i = 1;
     bool createit = false;
     strcpy(filename, "replays/replay1.txt");
@@ -1890,20 +2069,19 @@ void createReplay()
         if (fserver)
         {
             sendSize(tcpsock);
-            sendPseudo(tcpsock);
+            sendPseudo(tcpsock, strlen(player1ps));
             printf("im sending : %s\n", player1ps);
             int size = receiveSize(tcpsock);
-            player2ps = malloc(size * sizeof(char*));
-            receivePseudo(tcpsock, player2ps);
+            player2ps = malloc(size * sizeof(char *));
+            receivePseudo(tcpsock, player2ps, size);
         }
         else
         {
             int size = receiveSize(tcpsock);
-            player2ps = malloc(size * sizeof(char*));
-            receivePseudo(tcpsock, player2ps);
-            
+            player2ps = malloc(size * sizeof(char *));
+            receivePseudo(tcpsock, player2ps, size);
             sendSize(tcpsock);
-            sendPseudo(tcpsock);
+            sendPseudo(tcpsock, strlen(player1ps));
         }
         printf("i got : %s\n", player2ps);
         fprintf(replayfile, "%s -%s\n", player1ps, player2ps);
@@ -1973,10 +2151,11 @@ void reprint(SDL_Renderer *renderer)
         if (strlen(inputText) > 0)
         {
             print_pseudo_maker(font, renderer, inputText);
-        } else {
+        }
+        else
+        {
             print_pseudo_maker(font, renderer, " ");
         }
-        
     }
     else if (freplay)
     {
@@ -2063,4 +2242,148 @@ int receiveMove(TCPsocket socket)
     int32_t netCol;
     SDLNet_TCP_Recv(socket, &netCol, sizeof(netCol));
     return SDLNet_Read32(&netCol);
+}
+char **listenForBroadcasts()
+{
+    UDPsocket udpSocket;
+    UDPpacket *packet;
+
+    udpSocket = SDLNet_UDP_Open(5000);
+    if (!udpSocket)
+    {
+        fprintf(stderr, "Erreur lors de l'ouverture du socket UDP: %s\n", SDLNet_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    packet = SDLNet_AllocPacket(512);
+    if (!packet)
+    {
+        fprintf(stderr, "Erreur lors de l'allocation du paquet UDP: %s\n", SDLNet_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    ccpt = 0;
+    for (int i = 0; i < 150; i++)
+    {
+        printf("En attente d'un message de broadcast...\n");
+        printf("i = %d\n", i);
+        if (SDLNet_UDP_Recv(udpSocket, packet))
+        {
+            printf("Reçu un message de broadcast: %s\n", (char *)packet->data);
+            ctab[ccpt] = (char *)packet->data;
+            ccpt++;
+        }
+        SDL_Delay(100); // Attente de 10s
+    }
+
+    SDLNet_FreePacket(packet);
+    SDLNet_UDP_Close(udpSocket);
+    return ctab;
+}
+
+void broadcastPlayerInfo(const char *playerName, const char *broadcastIP)
+{
+    UDPsocket udpSocket;
+    UDPpacket *packet;
+
+    udpSocket = SDLNet_UDP_Open(0); // 0 pour choisir automatiquement un port
+    if (!udpSocket)
+    {
+        fprintf(stderr, "Erreur lors de l'ouverture du socket UDP: %s\n", SDLNet_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    packet = SDLNet_AllocPacket(512);
+    if (!packet)
+    {
+        fprintf(stderr, "Erreur lors de l'allocation du paquet UDP: %s\n", SDLNet_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    IPaddress broadcastAddr;
+    SDLNet_ResolveHost(&broadcastAddr, broadcastIP, 5000); // PORT pour l'envoie du message doit être idem que l'autre
+
+    snprintf((char *)packet->data, packet->maxlen, "Player: %s", playerName);
+    packet->address = broadcastAddr;
+    packet->len = strlen((char *)packet->data) + 1;
+
+    SDLNet_UDP_Send(udpSocket, -1, packet); // -1 signifie que le canal n'est pas lié
+
+    SDLNet_FreePacket(packet);
+    SDLNet_UDP_Close(udpSocket);
+}
+
+void printClientMenu(char **tab)
+{
+    if (ccpt == 0)
+    {
+        printf("Aucun serveur trouvé.\n");
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Aucun serveur trouvé", "Aucun serveur trouvé.", NULL);
+        fmenu =1;
+        fchserv = 0;
+        reprint(renderer);
+    }
+    else
+    {
+        SDL_RenderClear(renderer);
+        SDL_Surface *image = IMG_Load("images/p.jpg");
+        SDL_Texture *img_texture = NULL;
+        if (!image)
+        {
+            printf("Erreur de chargement de l'image : %s", SDL_GetError());
+        }
+        img_texture = SDL_CreateTextureFromSurface(renderer, image);
+        SDL_RenderCopy(renderer, img_texture, NULL, NULL);
+        SDL_Rect rects[ccpt];
+        int i = 0;
+        for (int j = 0; j < ccpt; j++)
+        {
+            rects[j].x = width / 2;
+            rects[j].y = height / ccpt * (j + 1);
+            rects[j].h = 100;
+            rects[j].w = 100;
+        }
+        for (int i = 0; i < ccpt; i++)
+        {
+            printText(font, renderer, white_color, tab[i], &rects[i], black_color);
+        }
+        SDL_RenderPresent(renderer);
+        printf("Serveurs trouvés :\n");
+        for (int i = 0; i < ccpt; i++)
+        {
+            printf("%d. %s\n", i, tab[i]);
+        }
+    }
+}
+
+void chooseClientMenu(char **tab, int num)
+{
+    SDL_RenderClear(renderer);
+    SDL_Surface *image = IMG_Load("images/p.jpg");
+    SDL_Texture *img_texture = NULL;
+    if (!image)
+    {
+        printf("Erreur de chargement de l'image : %s", SDL_GetError());
+    }
+    img_texture = SDL_CreateTextureFromSurface(renderer, image);
+    SDL_RenderCopy(renderer, img_texture, NULL, NULL);
+    SDL_Rect rects[ccpt];
+    for (int j = 0; j < ccpt; j++)
+    {
+        rects[j].x = width / 2;
+        rects[j].y = height / ccpt * (j + 1);
+        rects[j].h = 100;
+        rects[j].w = 100;
+    }
+    for (int i = 0; i < ccpt; i++)
+    {
+        if (i == num)
+        {
+            printText(font, renderer, yellow_color, tab[i], &rects[i], black_color);
+        }
+        else
+        {
+            printText(font, renderer, white_color, tab[i], &rects[i], black_color);
+        }
+    }
 }
