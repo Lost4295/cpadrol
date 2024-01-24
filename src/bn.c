@@ -4,20 +4,21 @@
 #else
 #include <ncurses.h>
 #endif
-#define WIDTH 30
-#define HEIGHT 10
+#define WIDTH 25
+#define HEIGHT 8
 
 int startx = 0;
 int starty = 0;
 
 char *choices[] = {
-    "Single Player ",
     "Multiplayer(Client)",
     "Multiplayer(Server)",
-    "Options",
     "Replays",
     "Exit",
 };
+
+
+
 int n_choices = sizeof(choices) / sizeof(char *);
 void print_menu(WINDOW *menu_win, int highlight);
 
@@ -34,7 +35,6 @@ int main()
     cbreak(); /* Line buffering disabled. pass on everything */
     startx = (80 - WIDTH) / 2;
     starty = (24 - HEIGHT) / 2;
-
     menu_win = newwin(HEIGHT, WIDTH, starty, startx);
     keypad(menu_win, TRUE);
     mvprintw(0, 0, "Use arrow keys to go up and down, Press enter to select a choice");
@@ -69,10 +69,37 @@ int main()
         if (choice != 0) /* User did a choice come out of the infinite loop */
             break;
     }
-    mvprintw(23, 0, "You chose choice %d with choice string %s\n", choice, choices[choice - 1]);
+    if (choice == 4)
+    {
+        goto end;
+    }
+    else
+    {
+        mvprintw(23, 0, "You chose choice %d with choice string %s\n", choice, choices[choice - 1]);
+        sleep(2);
+    }
     clrtoeol();
     refresh();
-    sleep(2);
+    switch (choice)
+    {
+    case 1:
+        system("./a.out||./a.exe");
+        break;
+    case 2:
+        /* TODO : get l'ip puis render*/
+        break;
+    case 3:
+        /* Fonction de replay */
+
+        break;
+    case 4:
+        goto end;
+        break;
+    default:
+        break;
+    }
+
+end:
     endwin();
     return 0;
 }
