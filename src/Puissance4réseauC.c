@@ -1,4 +1,6 @@
+#ifdef _WIN32
 #include <winsock2.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,7 +69,7 @@ int main(int argc, char *argv[])
     printf("Entrez l'adresse IP du serveur : ");
     scanf("%s", &ip);
     printf("\n");
-    createClient(ip);
+    tcpsock = createClient(ip);
     onConnectdone();
     createtab();
     system("cls");

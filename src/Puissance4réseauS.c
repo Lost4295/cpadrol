@@ -1,9 +1,12 @@
+#ifdef _WIN32
 #include <winsock2.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <stdbool.h>
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
@@ -66,7 +69,6 @@ int main(int argc, char *argv[])
     }
     intro();
     tcpsock = createServer();
-    sleep(1);
     onConnectdone();
     createtab();
     system("cls");
@@ -74,7 +76,7 @@ int main(int argc, char *argv[])
     while (ended != 1)
     {
         if (*pjactuel == 1)
-                {
+        {
             int num = turns();
             printf("Envoi en cours...\n");
             sendMove(tcpsock, num);
@@ -421,7 +423,7 @@ TCPsocket createServer()
 
     printf("En attente d'une connexion...\nIP : %s\n", get_ip());
     TCPsocket client = NULL;
-    int i =0;
+    int i = 0;
     while (!client)
     {
         client = SDLNet_TCP_Accept(server);
@@ -460,6 +462,7 @@ int receiveMove(TCPsocket socket)
 
 const char *get_ip()
 {
+#ifdef __unix__
     // Read out "hostname -I" command output
     FILE *fd = popen("hostname -I", "r");
     if (fd == NULL)
@@ -468,11 +471,11 @@ const char *get_ip()
         return NULL;
     }
     // Put output into a string (static memory)
-    static char buffer[100];
-    fgets(buffer, 100, fd);
+    static char buffer[IP_BUFFER_LEN];
+    fgets(buffer, IP_BUFFER_LEN, fd);
 
     // Only keep the first ip.
-    for (int i = 0; i < 100; ++i)
+    for (int i = 0; i < IP_BUFFER_LEN; ++i)
     {
         if (buffer[i] == ' ')
         {
@@ -486,4 +489,31 @@ const char *get_ip()
     ret[strlen(buffer)] = '\0';
     printf("%s\n", ret);
     return ret;
+
+#else
+
+    struct in_addr addr;
+    struct hostent *localhost;
+    int ret = -1;
+    char localname[1000] = {0};
+
+    // Demarrer les services de reseau
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+    // Recuperer le nom du PC local
+    ret = gethostname(&(localname[0]), 999);
+
+    printf("Host : %s (%d)\n", localname, ret);
+
+    // Recuperer une structure decrivant un hote a partir de son nom
+    localhost = gethostbyname(&(localname[0]));
+
+    // Extraire l'adresse (on suppose qu'elle est de type IPv4)
+    addr = *((struct in_addr *)localhost->h_addr_list[0]);
+
+    // Affichage
+    printf("IP = %s\n", inet_ntoa(addr));
+    return inet_ntoa(addr);
+#endif
 }
