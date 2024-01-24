@@ -187,9 +187,12 @@ int main(int argc, char *argv[])
         print_pseudo_maker(font, renderer, " ");
     }
     chmod("replays", 0777);
+    SDL_GameController *controller = findController();
     SDL_Event event;
     SDL_bool quit = SDL_FALSE;
     SDL_bool resized = SDL_FALSE;
+    SDL_bool listen = SDL_FALSE;
+    int wait = 0;
     while (!quit)
     {
         SDL_bool renderText = SDL_FALSE;
@@ -217,7 +220,8 @@ int main(int argc, char *argv[])
                 pop(inputText);
                 renderText = SDL_TRUE;
             }
-            else if ( event.key.keysym.sym == SDLK_h && (!fclient && !fconfig)  ) {
+            else if (event.key.keysym.sym == SDLK_h && (!fclient && !fconfig))
+            {
                 SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Help", "Appuyez sur Echap pour quitter.\nAppuyez sur Entrée pour valider.\nUtilisez les flèches directionnelles pour vous déplacer dans les menus.", NULL);
             }
             else
@@ -225,6 +229,7 @@ int main(int argc, char *argv[])
                 switch (event.key.keysym.sym)
                 {
                 case SDLK_UP:
+                up:
                     printf("sym up\n");
                     if (fmenu)
                     {
@@ -258,6 +263,7 @@ int main(int argc, char *argv[])
                     }
                     break;
                 case SDLK_DOWN:
+                down:
                     printf("sym down\n");
                     if (fmenu)
                     {
@@ -291,6 +297,7 @@ int main(int argc, char *argv[])
                     }
                     break;
                 case SDLK_LEFT:
+                left:
                     printf("sym left\n '%s'\n", player1ps);
                     if ((fplay && flocal && !ended) || (fplay && fserver && j == 1) || (fplay && fclient && j == 2))
                     {
@@ -302,6 +309,7 @@ int main(int argc, char *argv[])
                     }
                     break;
                 case SDLK_RIGHT:
+                right:
                     printf("sym right\n");
                     if ((fplay && flocal && !ended) || (fplay && fserver && j == 1) || (fplay && fclient && j == 2))
                     {
@@ -313,6 +321,7 @@ int main(int argc, char *argv[])
                     }
                     break;
                 case SDLK_ESCAPE:
+                escape:
                     if (fmenu)
                     {
                         quit = SDL_TRUE;
@@ -421,6 +430,7 @@ int main(int argc, char *argv[])
                     }
                     break;
                 case SDLK_RETURN:
+                enter:
                     if (fconfig)
                     {
                         char etet[70];
@@ -486,7 +496,8 @@ int main(int argc, char *argv[])
                             fsettings = 0;
                             fchmusic = 1;
                             SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Changement de Musique", "Appuyez sur Echap pour quitter.\nAppuyez sur A pour jouer la musique actuelle.\nAppuyez sur L pour jouer la musique en boucle.\nAppuyez sur + pour augmenter le volume.\nAppuyez sur - pour diminuer le volume.\nAppuyez sur M pour couper la musique.\nAppuyez sur P pour mettre en pause la musique.", NULL);
-                            if (fmute){
+                            if (fmute)
+                            {
                                 SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Mute", "La musique est actuellement en mute.\nAppuyez sur M pour la remettre.", NULL);
                             }
                             printmusicfiles(font, renderer, numm);
@@ -794,6 +805,38 @@ int main(int argc, char *argv[])
                 print_color();
             }
         }
+        else if (event.type == SDL_CONTROLLERDEVICEADDED)
+        {
+            if (!controller)
+            {
+                controller = SDL_GameControllerOpen(event.cdevice.which);
+            }
+        }
+        else if (event.type == SDL_CONTROLLERDEVICEREMOVED)
+        {
+            if (controller && event.cdevice.which == getControllerInstanceID(controller))
+            {
+                SDL_GameControllerClose(controller);
+                controller = findController();
+            }
+        }
+        else if (event.type == SDL_CONTROLLERBUTTONDOWN)
+        {
+            if (controller && event.cdevice.which == getControllerInstanceID(controller))
+            {
+                switch (event.cbutton.button)
+                {
+                case SDL_CONTROLLER_BUTTON_A:
+                    printf("A pressed!");
+                    goto enter;
+                    break;
+                case SDL_CONTROLLER_BUTTON_B:
+                    printf("B pressed!");
+                    goto escape;
+                    break;  
+                }
+            }
+        }
         if (renderText)
         {
             // Text is not empty
@@ -849,6 +892,53 @@ int main(int argc, char *argv[])
                 loadTableau(renderer);
                 InsertCoin(renderer, ec, replayfile);
                 SDL_RenderPresent(renderer);
+            }
+        }
+
+        if (controller)
+        {
+            float x = (float)SDL_GameControllerGetAxis(controller,
+                                                       SDL_CONTROLLER_AXIS_LEFTX) /
+                      (float)INT16_MAX;
+            float y = (float)SDL_GameControllerGetAxis(controller,
+                                                       SDL_CONTROLLER_AXIS_LEFTY) /
+                      (float)INT16_MAX;
+            if (listen)
+            {
+                if (x < -0.5f)
+                {
+                    printf("left\n");
+                    listen = SDL_FALSE;
+                    goto left;
+                }
+                else if (x > 0.5f)
+                {
+                    printf("right\n");
+                    listen = SDL_FALSE;
+                    goto right;
+                }
+                else if (y < -0.5f)
+                {
+                    printf("up\n");
+                    listen = SDL_FALSE;
+                    goto up;
+                }
+                else if (y > 0.5f)
+                {
+                    printf("down\n");
+                    listen = SDL_FALSE;
+                    goto down;
+                }
+            }
+            else
+            {
+                wait++;
+                printf("wait : %d\n", wait);
+            }
+            if (wait == 50)
+            {
+                listen = SDL_TRUE;
+                wait = 0;
             }
         }
         SDL_Delay(5);

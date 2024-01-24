@@ -93,7 +93,7 @@ char inputText[50];
 char ip[50];
 char *player1ps;
 char *player2ps;
-int num = 0, nus = 0, nup = 0, nuc = 0, nur = 0, numm = 1;
+int num = 0, nus = 0, nup = 0, nuc = 0, nur = 0, numm = 1, nuch =0 ;
 int flocal = 0, fserver = 0, fclient = 0;
 int fmplay = 0, fmreplay = 0, fccolor = 0, fsettings = 0, fmenu = 0, fchserv = 0, fplay = 0, fconfig = 1, freplay = 0, fauto = -1, fchmusic = 0, fmauto = 0, floop = 1, fmute = 0;
 int ended = 0, secret = 0;
@@ -2386,4 +2386,18 @@ void chooseClientMenu(char **tab, int num)
             printText(font, renderer, white_color, tab[i], &rects[i], black_color);
         }
     }
+}
+SDL_GameController *findController() {
+    for (int i = 0; i < SDL_NumJoysticks(); i++) {
+        if (SDL_IsGameController(i)) {
+            return SDL_GameControllerOpen(i);
+        }
+    }
+
+    return NULL;
+}
+
+SDL_JoystickID getControllerInstanceID(SDL_GameController *controller) {
+    return SDL_JoystickInstanceID(
+            SDL_GameControllerGetJoystick(controller));
 }
