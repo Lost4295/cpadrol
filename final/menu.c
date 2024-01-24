@@ -217,6 +217,9 @@ int main(int argc, char *argv[])
                 pop(inputText);
                 renderText = SDL_TRUE;
             }
+            else if ( event.key.keysym.sym == SDLK_h && (!fclient && !fconfig)  ) {
+                SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Help", "Appuyez sur Echap pour quitter.\nAppuyez sur Entrée pour valider.\nUtilisez les flèches directionnelles pour vous déplacer dans les menus.", NULL);
+            }
             else
             {
                 switch (event.key.keysym.sym)
@@ -250,7 +253,7 @@ int main(int argc, char *argv[])
                     }
                     if (fchserv)
                     {
-                        (nuch == 0) ? nuch = ccpt-1 : nuch--;
+                        (nuch == 0) ? nuch = ccpt - 1 : nuch--;
                         chooseClientMenu(ctab, nuch);
                     }
                     break;
@@ -336,13 +339,14 @@ int main(int argc, char *argv[])
                     {
                         fmenu = 1;
                         fplay = 0;
-                        print_menu_opts(font, renderer, num);
-                    }
-                    else if (flocal)
-                    {
-                        fplay = 1;
                         flocal = 0;
-                        print_play_opts(font, renderer, nup);
+                        if (!ended)
+                        {
+                            fclose(replayfile);
+                            remove(filename);
+                            printf("File deleted.\n");
+                        }
+                        print_menu_opts(font, renderer, num);
                     }
                     else if (fconfig)
                     {
@@ -410,6 +414,8 @@ int main(int argc, char *argv[])
                         fplay = 0;
                         fmenu = 1;
                         flocal = 0;
+                        fserver = 0;
+                        fclient = 0;
                         nuc = 0;
                         print_menu_opts(font, renderer, num);
                     }
@@ -479,6 +485,10 @@ int main(int argc, char *argv[])
                         case 2:
                             fsettings = 0;
                             fchmusic = 1;
+                            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Changement de Musique", "Appuyez sur Echap pour quitter.\nAppuyez sur A pour jouer la musique actuelle.\nAppuyez sur L pour jouer la musique en boucle.\nAppuyez sur + pour augmenter le volume.\nAppuyez sur - pour diminuer le volume.\nAppuyez sur M pour couper la musique.\nAppuyez sur P pour mettre en pause la musique.", NULL);
+                            if (fmute){
+                                SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Mute", "La musique est actuellement en mute.\nAppuyez sur M pour la remettre.", NULL);
+                            }
                             printmusicfiles(font, renderer, numm);
                             break;
                         case 3:
@@ -504,7 +514,6 @@ int main(int argc, char *argv[])
                             printText(font, renderer, white_color, get_ip(), &recte, black_color);
                             printText(font, renderer, white_color, "Donnez cette adresse IP à votre adversaire !", &rectt, black_color);
                             SDL_RenderPresent(renderer);
-
                             tcpsock = createServer();
                             fplay = 1;
                             SDL_RenderClear(renderer);
@@ -537,6 +546,7 @@ int main(int argc, char *argv[])
                         case 3:
                             fmplay = 0;
                             fchserv = 1;
+                            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Recherche de serveurs", "La fonction avait pour but d'effectuer une recherche asynchrone de joueurs. Une fois les joueurs trouvés, elle affichait une liste de ces mêmes joueurs.\n Il fallait ensuite choisir la personne avec qui l'on voulait jouer, pour que celle-ci ne reçoive une notification de demande de connexion, qu'elle devait accepter, ou non, si elle voulait jouer.\n Cette fonction n'est pas réalisable en C, mais on a commencé à la réaliser.", NULL);
                             char **tab = listenForBroadcasts();
                             printClientMenu(tab);
                             break;
@@ -630,7 +640,8 @@ int main(int argc, char *argv[])
                     {
                         needenter = false;
                     }
-                    else if (fchserv){
+                    else if (fchserv)
+                    {
                         printf("You selected : %s\n", ctab[nuch]); // A enlever
                         char *ip = ctab[nuch];
                         printf("IP : %s\n", ip);
