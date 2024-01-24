@@ -83,15 +83,14 @@ int main()
     switch (choice)
     {
     case 1:
-        system("./hey.out||hey.exe");
+        system("p4s||p4s.exe");
         sleep(1);
         break;
     case 2:
-        /* TODO : get l'ip puis render*/
+        system("p4c||p4c.exe");
         break;
     case 3:
-        /* Fonction de replay */
-
+        system("replayer||replayer.exe");
         break;
     case 4:
         goto end;

@@ -4,8 +4,10 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-typedef int socklen_t;
-#define PORT 25
+#define SDL_MAIN_HANDLED
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_net.h>
+unsigned int PORT = 42069;
 
 #define LIGNES 6
 #define COLONNES 7
@@ -33,9 +35,9 @@ void checkligne(int *joueur);
 void checkcol(int *joueur);
 void checkdiag(int *joueur);
 void checknull();
-int tryconnect(int erreur);
-int instanciate();
+TCPsocket createClient(const char *ip);
 
+TCPsocket tcpsock;
 FILE *fp;
 int tab[LIGNES][COLONNES];
 int jactuel = 1;
@@ -51,97 +53,46 @@ int main(int argc, char *argv[])
         animation = 1;
     }
     intro();
-    int erreur = instanciate();
-    tryconnect(erreur);
-}
-
-int instanciate()
-{
-    WSADATA WSAData;
-    int erreur = WSAStartup(MAKEWORD(2, 2), &WSAData);
-    return erreur;
-}
-
-int tryconnect(int erreur)
-{
-    if (!erreur)
+    if (0 != SDL_Init(SDL_INIT_EVENTS))
     {
-        SOCKET sock;
-        SOCKADDR_IN sin;
-        sock = socket(AF_INET, SOCK_STREAM, 0);
-        /* Si la socket est valide */
-        if (sock != INVALID_SOCKET)
+        fprintf(stderr, "Erreur SDL_Init : %s", SDL_GetError());
+        return -1;
+    }
+    if (SDLNet_Init() < 0)
+    {
+        fprintf(stderr, "SDLNet_Init: %s\n", SDLNet_GetError());
+        exit(EXIT_FAILURE);
+    }
+    char ip[16];
+    printf("Entrez l'adresse IP du serveur : ");
+    scanf("%s", &ip);
+    printf("\n");
+    createClient(ip);
+    onConnectdone();
+    createtab();
+    system("cls");
+    printtab();
+    while (ended != 1)
+    {
+        if (*pjactuel == 1)
         {
-            printf("La socket %d est maintenant ouverte en mode TCP/IP\n", sock);
-            /* Configuration */
-            sin.sin_addr.s_addr = inet_addr("127.0.0.1"); /* Adresse IP automatique */
-            sin.sin_family = AF_INET;                     /* Protocole familial (IP) */
-            sin.sin_port = htons(PORT);                   /* Listage du port */
-            if (connect(sock, (SOCKADDR *)&sin, sizeof(sin)) != SOCKET_ERROR)
-            {
-                printf("Connection a %s sur le port %d\n", inet_ntoa(sin.sin_addr), htons(sin.sin_port));
-                sleep(1);
-                onConnectdone();
-                createtab();
+            printtab();
+            printf("En attente du joueur %d...\n", *pjactuel);
+            int rnum = receiveMove(tcpsock);
                 system("cls");
-                printtab();
-                while (ended != 1)
-                {
-                    if (*pjactuel == 1)
-                    {
-                        printtab();
-                        printf("En attente du joueur %d...\n", *pjactuel);
-                        int waitforrecieve = recv(sock, &buffer, sizeof(buffer), 0);
-                        if (waitforrecieve != SOCKET_ERROR)
-                        {
-                            int rnum = buffer - '0';
-                            system("cls");
-                            verifyadd(rnum, &jactuel);
-                            verifywin(rnum, pjactuel);
-                            *pjactuel = 2;
-                        }
-                    }
-                    else
-                    {
-                        int num = turns();
-                        char convert = num + '0';
-                    sender:
-                        if (send(sock, &convert, sizeof(convert), 0) != SOCKET_ERROR)
-                        {
-                            verifywin(num, pjactuel);
-                            printf("Envoi en cours...\n");
-                            sleep(2);
-                            *pjactuel = 1;
-                        }
-                        else
-                        {
-                            printf("Erreur de transmission\n");
-                            goto sender;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                printf("La connexion au serveur a echoue.\n");
-                printf("Fermeture de la socket...\n");
-                closesocket(sock);
-                int erreur = instanciate();
-                tryconnect(erreur);
-            }
+                verifyadd(rnum, &jactuel);
+                verifywin(rnum, pjactuel);
+                *pjactuel = 2;
         }
-        /* Fermeture de la socket */
-        printf("Fermeture de la socket...\n");
-        closesocket(sock);
-        printf("Fermeture du client terminee ! Appuyez sur entree pour continuer.\n");
-        WSACleanup();
+        else
+        {
+            int num = turns();
+            printf("Envoi en cours...\n");
+            sendMove(tcpsock, num);
+            verifywin(num, pjactuel);
+            *pjactuel = 1;
+        }
     }
-    else
-    {
-        printf("Erreur de connexion.\n");
-    }
-    getchar();
-    return EXIT_SUCCESS;
 }
 
 void intro()
@@ -448,9 +399,47 @@ void endgame(int *wjoueur, int result, int mode)
     sleep(2);
     printf("A bientot !\n");
     fclose(fp);
+    SDL_Quit();
     exit(0);
 }
 void clrscr()
 {
     system("@cls||clear");
+}
+
+// Connexion à un serveur TCP
+TCPsocket createClient(const char *ip)
+{
+    IPaddress ipAddr;
+    TCPsocket client;
+
+    if (SDLNet_ResolveHost(&ipAddr, ip, PORT) < 0)
+    {
+        fprintf(stderr, "SDLNet_ResolveHost: %s\n", SDLNet_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    client = SDLNet_TCP_Open(&ipAddr);
+    if (!client)
+    {
+        fprintf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    return client;
+}
+
+// Envoyer un mouvement
+void sendMove(TCPsocket socket, int col)
+{
+    int32_t netCol = SDLNet_Read32(&col);
+    SDLNet_TCP_Send(socket, &netCol, sizeof(netCol));
+}
+
+// Recevoir un mouvement
+int receiveMove(TCPsocket socket)
+{
+    int32_t netCol;
+    SDLNet_TCP_Recv(socket, &netCol, sizeof(netCol));
+    return SDLNet_Read32(&netCol);
 }
