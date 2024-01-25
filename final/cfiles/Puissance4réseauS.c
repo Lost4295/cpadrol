@@ -471,11 +471,11 @@ const char *get_ip()
         return NULL;
     }
     // Put output into a string (static memory)
-    static char buffer[IP_BUFFER_LEN];
-    fgets(buffer, IP_BUFFER_LEN, fd);
+    static char buffer[100];
+    fgets(buffer, 100, fd);
 
     // Only keep the first ip.
-    for (int i = 0; i < IP_BUFFER_LEN; ++i)
+    for (int i = 0; i < 100; ++i)
     {
         if (buffer[i] == ' ')
         {
