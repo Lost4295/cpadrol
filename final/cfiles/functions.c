@@ -15,8 +15,9 @@
 #include <string.h>
 #ifdef __WIN32__
 #include <winsock2.h>
-#endif
+#else
 #include <features.h>
+#endif
 #define IP_BUFFER_LEN 100
 #define BUFFER_SIZE 1000
 #define MUSIC 2
