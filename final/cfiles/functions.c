@@ -16,7 +16,7 @@
 #ifdef __WIN32__
 #include <winsock2.h>
 #endif
-
+#include <features.h>
 #define IP_BUFFER_LEN 100
 #define BUFFER_SIZE 1000
 #define MUSIC 2
@@ -24,6 +24,8 @@ unsigned int PORT = 42069;
 #define LOOP 3
 #define MUTE 4
 #define PSEUDO 1
+int DT_REG = 8;
+# define DT_REG		DT_REG
 #define RED 5
 #define GREEN 6
 #define BLUE 7
@@ -1283,7 +1285,7 @@ int printreplayfiles()
     {
         while ((dir = readdir(d)) != NULL)
         {
-#if _DIRENT_HAVE_D_TYPE
+            #ifdef _DIRENT_HAVE_D_TYPE
             if (dir->d_type == DT_REG)
             {
                 cpt++;
@@ -1344,7 +1346,7 @@ int printreplayfiles()
     {
         while ((dir = readdir(d)) != NULL)
         {
-#if _DIRENT_HAVE_D_TYPE
+#ifdef _DIRENT_HAVE_D_TYPE
             if (dir->d_type == DT_REG)
             {
                 printText(font, renderer, white_color, dir->d_name, &rects[i], black_color);
@@ -1384,7 +1386,7 @@ int printmusicfiles(TTF_Font *font, SDL_Renderer *renderer, int num)
     {
         while ((dir = readdir(d)) != NULL)
         {
-#if _DIRENT_HAVE_D_TYPE
+#ifdef _DIRENT_HAVE_D_TYPE
             if (dir->d_type == DT_REG)
             {
                 cpt++;
@@ -1419,7 +1421,7 @@ int printmusicfiles(TTF_Font *font, SDL_Renderer *renderer, int num)
         {
             while ((dir = readdir(d)) != NULL)
             {
-#if _DIRENT_HAVE_D_TYPE
+#ifdef _DIRENT_HAVE_D_TYPE
                 if (dir->d_type == DT_REG)
                 {
                     char textmus[25];
@@ -1571,10 +1573,9 @@ void print_files(TTF_Font *font, SDL_Renderer *renderer, int num)
     d = opendir("replays");
     if (d)
     {
-        printf("d = %s\n", d->dd_name);
         while ((dir = readdir(d)) != NULL)
         {
-#if _DIRENT_HAVE_D_TYPE
+#ifdef _DIRENT_HAVE_D_TYPE
             if (dir->d_type == DT_REG)
             {
                 if (i == num)
@@ -1629,7 +1630,7 @@ void replayGame(int num)
         while ((dir = readdir(d)) != NULL)
         {   
 
-            #if _DIRENT_HAVE_D_TYPE
+            #ifdef _DIRENT_HAVE_D_TYPE
             if (dir->d_type == DT_REG)
             {
                 if (i == num)
