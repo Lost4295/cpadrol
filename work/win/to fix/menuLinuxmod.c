@@ -98,5 +98,4 @@ void choices(int choix) {
     printw("%sReplays\n", (choix==4)?"   " : "");
     
     printw("\nUtilisez les fleches pour selectionner.\nAppuyez sur \"Entree\" pour confirmer.\nAppuyez sur \"esc\" pour quitter.");
-    printw("\n\n\n\n\n COPYRIGHT: All rights reserved (Mathis VAREILLES, Ylan TURIN-KONDI, Zacharie ROGER)");
 }
