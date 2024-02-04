@@ -35,7 +35,7 @@ int colorR = 20;
 int colorG = 25;
 int colorB = 25;
 int colorA = 145;
-#define SECRET "Zach"
+#define SECRET "EEEE"
 #define ID_SIZE 20
 #define IP_SIZE 16
 const SDL_Rect color_rect = {(640 - 500) / 2, 200, 500, 20};
@@ -57,7 +57,7 @@ static float color_slider_value3 = 1.0f;
 static float color_slider_value4 = 1.0f;
 
 // TODO : Implémenter le multijoueur
-// TODO Voir l'envoi du pseudo avec zacharie
+// TODO Voir l'envoi du pseudo avec EEEE
 // TODO : Faire les vérifs du fichier de config;
 // TODO : Handle les errors connes style (config mais pas de config dedans)
 // TODO : ranger les fichiers dans des dossiers et cleaner tout
@@ -296,7 +296,7 @@ int init(SDL_Window **window, SDL_Renderer **renderer, int w, int h)
     img_texture = SDL_CreateTextureFromSurface(*renderer, image);
     SDL_RenderCopy(*renderer, img_texture, NULL, NULL);
     print_main_title();
-    printText(lfont, renderer, black_color, "Realisé par Mathis Vareilles, Ylan Turin--Kondi et Zacharie Roger", &authors, white_color);
+    printText(lfont, renderer, black_color, "Realisé par Tata , Titi et Toto Roger", &authors, white_color);
     SDL_RenderPresent(*renderer);
     return 0;
 }
@@ -561,15 +561,15 @@ void get_user_vars(TTF_Font *font, SDL_Renderer *renderer)
             strcpy(texte, "Bonjour, ");
             strcat(texte, ane);
             strcat(texte, " !");
-            if (strcmp(ane, "Zacharie") == 0)
+            if (strcmp(ane, "Toto") == 0)
             {
                 fsz = 1;
             }
-            else if (strcmp(ane, "Ylan") == 0)
+            else if (strcmp(ane, "Titi") == 0)
             {
                 fsy = 1;
             }
-            else if (strcmp(ane, "Mathis") == 0)
+            else if (strcmp(ane, "Tata") == 0)
             {
                 fsm = 1;
             }
@@ -838,9 +838,9 @@ int InsertCoin(SDL_Renderer *renderer, int num, FILE *replayfile)
 void checkSecretPions(int i, int j)
 {
     SDL_Rect rct = {j * 50 + 28, i * 50 + 28, 35, 35};
-    if ((fsy && tableau[i][j] == 1) || (fsy && tableau[i][j] == 3) || ((fclient || fserver) && (strcmp("Ylan", player2ps) == 0 && (tableau[i][j] == 2 || tableau[i][j] == 4))))
+    if ((fsy && tableau[i][j] == 1) || (fsy && tableau[i][j] == 3) || ((fclient || fserver) && (strcmp("Titi", player2ps) == 0 && (tableau[i][j] == 2 || tableau[i][j] == 4))))
     {
-        SDL_Surface *image = IMG_Load("images/ylan.png");
+        SDL_Surface *image = IMG_Load("images/Titi.png");
         SDL_Texture *img_texture = NULL;
         if (!image)
         {
@@ -852,9 +852,9 @@ void checkSecretPions(int i, int j)
         SDL_DestroyTexture(img_texture);
         SDL_FreeSurface(image);
     }
-    if ((fsm && tableau[i][j] == 1) || (fsm && tableau[i][j] == 3) || ((fclient || fserver) && (strcmp("Mathis", player2ps) == 0 && (tableau[i][j] == 2 || tableau[i][j] == 4))))
+    if ((fsm && tableau[i][j] == 1) || (fsm && tableau[i][j] == 3) || ((fclient || fserver) && (strcmp("Tata", player2ps) == 0 && (tableau[i][j] == 2 || tableau[i][j] == 4))))
     {
-        SDL_Surface *image = IMG_Load("images/mathis.png");
+        SDL_Surface *image = IMG_Load("images/Tata.png");
         SDL_Texture *img_texture = NULL;
         if (!image)
         {
@@ -867,9 +867,9 @@ void checkSecretPions(int i, int j)
         SDL_DestroyTexture(img_texture);
         SDL_FreeSurface(image);
     }
-    if ((fsz && tableau[i][j] == 1) || (fsz && tableau[i][j] == 3) || ((fclient || fserver) && (strcmp("Zacharie", player2ps) == 0 && (tableau[i][j] == 2 || tableau[i][j] == 4))))
+    if ((fsz && tableau[i][j] == 1) || (fsz && tableau[i][j] == 3) || ((fclient || fserver) && (strcmp("Toto", player2ps) == 0 && (tableau[i][j] == 2 || tableau[i][j] == 4))))
     {
-        SDL_Surface *image = IMG_Load("images/zacharie.png");
+        SDL_Surface *image = IMG_Load("images/Toto.png");
         SDL_Texture *img_texture = NULL;
         if (!image)
         {
